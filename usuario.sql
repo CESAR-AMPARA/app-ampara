@@ -1,4 +1,4 @@
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
 
     id BIGSERIAL PRIMARY KEY,
 
