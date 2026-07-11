@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import (
     Flask,
     render_template,
@@ -12,10 +15,7 @@ from werkzeug.security import (
 
 from config import Config
 from models import db, Usuario
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
 
 app = Flask(__name__)
 
