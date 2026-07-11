@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Entrar no sistema — A.M.P.A.R.A.</title>
   <meta name="description" content="Acesse a rede A.M.P.A.R.A. com suas credenciais institucionais." />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
 </head>
 <body>
@@ -24,7 +24,7 @@
   </div>
 
   <header class="site-header">
-    <a class="brand" href="index.html">
+    <a class="brand" href="/">
       <span class="mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
       </span>
@@ -34,7 +34,7 @@
       </span>
     </a>
     <div class="header-actions">
-      <a class="header-link" href="cadastro.html">Primeiro acesso →</a>
+      <a class="header-link" href="/cadastro">Primeiro acesso →</a>
     </div>
   </header>
 
@@ -61,10 +61,10 @@
 
         <form id="loginForm" novalidate>
           <div class="field">
-            <label for="ident">E-mail institucional, Matrícula ou CPF</label>
+            <label for="email">E-mail institucional, Matrícula ou CPF</label>
             <div class="input-shell">
               <span class="ico" aria-hidden="true">👤</span>
-              <input id="ident" name="ident" type="text" placeholder="ex.: professor@edu.gov.br" autocomplete="username" required />
+              <input id="email" name="email" type="text" placeholder="ex.: professor@edu.gov.br" autocomplete="username" required />
             </div>
           </div>
 
@@ -98,13 +98,13 @@
         </button>
 
         <div class="form-foot">
-          Primeiro acesso institucional? <a class="link-small" href="cadastro.html">Cadastre-se aqui</a>
+          Primeiro acesso institucional? <a class="link-small" href="/cadastro">Cadastre-se aqui</a>
           <div class="compliance"><span class="dot"></span> Ambiente Protegido &amp; Monitorado — Conformidade estrita com a LGPD.</div>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="js/main.js"></script>
+  <script src="/js/main.js"></script>
 </body>
 </html>
