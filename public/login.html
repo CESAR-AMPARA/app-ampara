@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrar no sistema — A.M.P.A.R.A.</title>
+  <meta name="description" content="Acesse a rede A.M.P.A.R.A. com suas credenciais institucionais." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+
+  <div class="a11y-bar">
+    <div class="wrap">
+      <span class="label">Acessibilidade</span>
+      <nav aria-label="Ferramentas de acessibilidade">
+        <button class="a11y-btn" data-action="font">A+ Aumentar fonte</button>
+        <button class="a11y-btn" data-action="contrast" aria-pressed="false">◐ Alto contraste</button>
+        <button class="a11y-btn" data-action="reader">🔊 Leitor de tela</button>
+        <a class="a11y-btn" href="#conteudo">Ir para o conteúdo</a>
+      </nav>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </span>
+      <span>
+        <span class="name">A.M.P.A.R.A.</span>
+        <span class="tagline">Apoio, Monitoramento Psicológico e Acolhimento Responsável ao Aluno</span>
+      </span>
+    </a>
+    <div class="header-actions">
+      <a class="header-link" href="cadastro.html">Primeiro acesso →</a>
+    </div>
+  </header>
+
+  <main id="conteudo" class="container">
+    <section class="auth-wrap">
+      <!-- Painel de boas-vindas -->
+      <div class="welcome-panel">
+        <span class="badge"><span class="dot"></span> Ambiente Protegido</span>
+        <h1>Bem-vindo(a) de volta à rede de cuidado.</h1>
+        <p>Sua escuta constrói uma escola mais segura. Acesse com suas credenciais institucionais para acompanhar sinais, registros e planos de acolhimento.</p>
+        <div class="note-card">
+          <span class="ico" aria-hidden="true">🔒</span>
+          <span>
+            <strong>Ambiente Protegido &amp; Monitorado</strong>
+            <span>Conformidade estrita com a LGPD. Todos os acessos são auditados e os dados sensíveis criptografados.</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Formulário de login -->
+      <div class="form-card">
+        <h2>Entrar no sistema</h2>
+        <p class="sub">Use suas credenciais institucionais.</p>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="ident">E-mail institucional, Matrícula ou CPF</label>
+            <div class="input-shell">
+              <span class="ico" aria-hidden="true">👤</span>
+              <input id="ident" name="ident" type="text" placeholder="ex.: professor@edu.gov.br" autocomplete="username" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="senha">Senha</label>
+              <a class="link-small" href="#">Esqueci minha senha</a>
+            </div>
+            <div class="input-shell">
+              <span class="ico" aria-hidden="true">🔑</span>
+              <input id="senha" name="senha" type="password" placeholder="••••••••" autocomplete="current-password" required />
+              <button type="button" class="toggle" data-toggle-password="senha">Mostrar</button>
+            </div>
+          </div>
+
+          <div class="check-row">
+            <input id="lembrar" type="checkbox" />
+            <div class="txt">
+              <label for="lembrar">Lembrar meu acesso neste dispositivo</label>
+              <small>Recomendado apenas para computadores particulares e seguros.</small>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg">Entrar no sistema →</button>
+        </form>
+
+        <div class="divider">ou acesse via rede educacional</div>
+
+        <button type="button" class="gov-btn">
+          <span class="gov-tag">gov</span> Entrar com Gov.br / Portal da Secretaria de Educação
+        </button>
+
+        <div class="form-foot">
+          Primeiro acesso institucional? <a class="link-small" href="cadastro.html">Cadastre-se aqui</a>
+          <div class="compliance"><span class="dot"></span> Ambiente Protegido &amp; Monitorado — Conformidade estrita com a LGPD.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

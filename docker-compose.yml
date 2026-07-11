@@ -1,0 +1,7 @@
+services:
+  ampara:
+    build: .
+    image: ampara-web
+    container_name: ampara-web
+    ports:
+      - "80:80"

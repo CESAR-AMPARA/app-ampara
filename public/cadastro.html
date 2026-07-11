@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastre-se na rede — A.M.P.A.R.A.</title>
+  <meta name="description" content="Onboarding institucional da rede A.M.P.A.R.A. Seu perfil passará por auditoria antes da liberação." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+
+  <div class="a11y-bar">
+    <div class="wrap">
+      <span class="label">Acessibilidade</span>
+      <nav aria-label="Ferramentas de acessibilidade">
+        <button class="a11y-btn" data-action="font">A+ Aumentar fonte</button>
+        <button class="a11y-btn" data-action="contrast" aria-pressed="false">◐ Alto contraste</button>
+        <button class="a11y-btn" data-action="reader">🔊 Leitor de tela</button>
+        <a class="a11y-btn" href="#conteudo">Ir para o conteúdo</a>
+      </nav>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </span>
+      <span>
+        <span class="name">A.M.P.A.R.A.</span>
+        <span class="tagline">Acolhimento, Monitoramento e Prevenção no Ambiente Escolar</span>
+      </span>
+    </a>
+    <div class="header-actions">
+      <a class="header-link" href="login.html">← Voltar para o Login</a>
+    </div>
+  </header>
+
+  <main id="conteudo" class="container">
+    <section class="onboarding">
+      <span class="badge">Onboarding Institucional</span>
+      <h1>Cadastre-se na rede A.M.P.A.R.A.</h1>
+      <p class="sub">Seu perfil passará por auditoria institucional antes da liberação.</p>
+
+      <!-- Indicador de etapas -->
+      <div class="steps" id="steps">
+        <div class="step active" data-step="1">
+          <div class="bar"></div>
+          <div class="row"><span class="num">1</span> Identificação</div>
+        </div>
+        <div class="step" data-step="2">
+          <div class="bar"></div>
+          <div class="row"><span class="num">2</span> Vínculo Institucional</div>
+        </div>
+        <div class="step" data-step="3">
+          <div class="bar"></div>
+          <div class="row"><span class="num">3</span> Segurança &amp; Termos</div>
+        </div>
+      </div>
+
+      <form id="wizard" class="wizard-card" novalidate>
+
+        <!-- ETAPA 1 — Identificação -->
+        <section class="panel active" data-panel="1">
+          <h2>Perfil profissional (RBAC)</h2>
+          <p class="desc">Selecione sua função. Isso define suas permissões de acesso aos registros psicossociais.</p>
+
+          <div class="rbac-grid" role="group" aria-label="Perfil profissional">
+            <button type="button" class="rbac-card" data-role="docente" aria-pressed="false">
+              <span class="picked">✓ Selecionado</span>
+              <span class="avatar" aria-hidden="true"></span>
+              <span class="role">Docente</span>
+              <span class="role-sub">Professor(a) do Ensino Médio</span>
+            </button>
+            <button type="button" class="rbac-card" data-role="equipe" aria-pressed="false">
+              <span class="picked">✓ Selecionado</span>
+              <span class="avatar" aria-hidden="true"></span>
+              <span class="role">Equipe Multidisciplinar</span>
+              <span class="role-sub">Psicólogo, Orientador ou Assistente Social</span>
+            </button>
+            <button type="button" class="rbac-card" data-role="gestao" aria-pressed="false">
+              <span class="picked">✓ Selecionado</span>
+              <span class="avatar" aria-hidden="true"></span>
+              <span class="role">Gestão / Coordenação</span>
+              <span class="role-sub">Direção e Coordenação Escolar</span>
+            </button>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="nome">Nome completo <span class="req">*</span></label>
+              <input id="nome" class="input-plain" type="text" placeholder="Ex.: Maria de Souza Lima" required />
+            </div>
+            <div class="field">
+              <label for="tel">Telefone celular (MFA/SMS) <span class="req">*</span></label>
+              <input id="tel" class="input-plain" type="tel" placeholder="(00) 90000-0000" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="email">E-mail institucional <span class="req">*</span></label>
+            <input id="email" class="input-plain" type="email" placeholder="nome@edu.gov.br" required />
+          </div>
+
+          <div class="wizard-foot">
+            <a class="link-back" href="login.html">← Voltar para o Login</a>
+            <button type="button" class="btn btn-primary" data-next="1">Continuar →</button>
+          </div>
+        </section>
+
+        <!-- ETAPA 2 — Vínculo Institucional -->
+        <section class="panel" data-panel="2">
+          <h2>Vínculo institucional &amp; rastreabilidade</h2>
+          <p class="desc">Usaremos estas informações para validar seu cadastro com a Secretaria de Educação.</p>
+
+          <div class="field">
+            <label for="matricula">Matrícula funcional <span class="req">*</span></label>
+            <input id="matricula" class="input-plain" type="text" placeholder="00000000-0" required />
+          </div>
+
+          <div class="grid-3">
+            <div class="field">
+              <label for="estado">Estado <span class="req">*</span></label>
+              <select id="estado" class="input-plain" required>
+                <option value="" selected disabled>Selecione...</option>
+                <option>Acre</option><option>Alagoas</option><option>Amapá</option>
+                <option>Amazonas</option><option>Bahia</option><option>Ceará</option>
+                <option>Distrito Federal</option><option>Espírito Santo</option><option>Goiás</option>
+                <option>Maranhão</option><option>Mato Grosso</option><option>Mato Grosso do Sul</option>
+                <option>Minas Gerais</option><option>Pará</option><option>Paraíba</option>
+                <option>Paraná</option><option>Pernambuco</option><option>Piauí</option>
+                <option>Rio de Janeiro</option><option>Rio Grande do Norte</option><option>Rio Grande do Sul</option>
+                <option>Rondônia</option><option>Roraima</option><option>Santa Catarina</option>
+                <option>São Paulo</option><option>Sergipe</option><option>Tocantins</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="municipio">Município <span class="req">*</span></label>
+              <input id="municipio" class="input-plain" type="text" placeholder="Selecione o estado primeiro" disabled required />
+            </div>
+            <div class="field">
+              <label for="escola">Escola <span class="req">*</span></label>
+              <input id="escola" class="input-plain" type="text" placeholder="Buscar escola..." disabled required />
+            </div>
+          </div>
+          <p class="muted" style="font-size:.82rem;">Base pública integrada ao INEP/Censo Escolar. Os campos são preenchidos por autocompletar.</p>
+
+          <div class="wizard-foot">
+            <button type="button" class="link-back" data-prev="2">← Etapa anterior</button>
+            <button type="button" class="btn btn-primary" data-next="2">Continuar →</button>
+          </div>
+        </section>
+
+        <!-- ETAPA 3 — Segurança & Termos -->
+        <section class="panel" data-panel="3">
+          <h2>Credenciais &amp; conformidade legal</h2>
+          <p class="desc">Crie uma senha forte e aceite os compromissos de sigilo.</p>
+
+          <div class="field">
+            <label for="pass1">Criar senha <span class="req">*</span></label>
+            <input id="pass1" class="input-plain" type="password" autocomplete="new-password" required />
+            <div class="strength">
+              <div class="track"><div class="fill" id="strengthFill"></div></div>
+              <div class="label" id="strengthLabel">Força: —</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="pass2">Confirmar senha <span class="req">*</span></label>
+            <input id="pass2" class="input-plain" type="password" autocomplete="new-password" required />
+            <div class="match-msg" id="matchMsg" hidden></div>
+          </div>
+
+          <p class="terms-title">Compromissos obrigatórios (LGPD)</p>
+          <div class="terms-box">
+            <div class="check-row">
+              <input id="t1" type="checkbox" required />
+              <label for="t1">Li e concordo com a <a href="#">Política de Privacidade</a> e o Termo de Tratamento de Dados Sensíveis de Saúde Escolar (LGPD).</label>
+            </div>
+            <div class="check-row">
+              <input id="t2" type="checkbox" required />
+              <label for="t2">Assino o Compromisso de Sigilo e Confidencialidade sobre os registros de comportamento e alertas psicossociais dos estudantes.</label>
+            </div>
+          </div>
+
+          <div class="wizard-foot">
+            <button type="button" class="link-back" data-prev="3">← Etapa anterior</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Solicitar validação de cadastro</button>
+          </div>
+        </section>
+
+        <!-- SUCESSO -->
+        <section class="panel" data-panel="4">
+          <div class="success">
+            <div class="ico" aria-hidden="true">✓</div>
+            <h2>Cadastro enviado para auditoria</h2>
+            <p class="muted">Recebemos sua solicitação. A Secretaria de Educação validará seu vínculo institucional e você receberá a liberação por e-mail e SMS.</p>
+            <div style="margin-top:22px;">
+              <a class="btn btn-primary" href="login.html">Voltar para o Login</a>
+            </div>
+          </div>
+        </section>
+
+      </form>
+    </section>
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
