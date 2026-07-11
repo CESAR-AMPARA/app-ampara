@@ -135,21 +135,6 @@ O projeto está totalmente containerizado e pronto para produção, amarrando o 
 3. O Docker criará a imagem baseada em Python, instalará as dependências e subirá o servidor Gunicorn mapeado na porta `80`.
 4. Acesse a aplicação no seu navegador em [http://localhost](http://localhost).
 
----
-
-## 🗄️ Próximos Passos (Configuração do Banco de Dados Relacional)
-
-Conforme solicitado, **nenhuma configuração persistente de infraestrutura de banco de dados externa foi realizada nesta etapa**, mantendo o código flexível para implementações futuras.
-
-Atualmente, o sistema utiliza o **SQLite** como banco de dados em memória/local por padrão por meio do `SQLALCHEMY_DATABASE_URI` dinâmico. Quando você estiver pronto para implementar a conexão com um banco de dados relacional robusto de produção (como **PostgreSQL** ou **MySQL**), os passos recomendados são:
-
-1. Subir um serviço de banco de dados (ex: no Docker Compose ou na AWS RDS).
-2. Definir a variável de ambiente `DATABASE_URL` no seu servidor de produção apontando para a sua string de conexão:
-   - Exemplo PostgreSQL: `postgresql://usuario:senha@host:porta/banco`
-3. O ORM do SQLAlchemy (`models.py`) está totalmente pronto para mapear as tabelas automaticamente para qualquer banco de dados relacional de destino sem necessitar de alterações na estrutura de código do app.
-
----
-
 ## 🔄 Fluxo de CI/CD (GitHub Actions)
 
 A esteira de integração e entrega contínua está configurada e dividida em dois fluxos principais:
