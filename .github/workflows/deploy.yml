@@ -16,9 +16,9 @@ jobs:
       - name: Execute Remote SSH Commands
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.EC2_HOST_eudes }}
+          username: ${{ secrets.EC2_USERNAME_eudes }}
+          key: ${{ secrets.EC2_SSH_KEY_eudes }}
           port: 22
           script: |
             cd ~
