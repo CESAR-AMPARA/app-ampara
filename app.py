@@ -10,7 +10,7 @@ from werkzeug.security import (
     check_password_hash
 )
 
-from models import Config
+from config import Config
 from models import db, Usuario
 from dotenv import load_dotenv
 
@@ -42,10 +42,18 @@ def cadastro():
     )
 
 @app.route("/login")
-def cadastro():
+def login():
 
     return render_template(
         "login.html"
+    )
+
+
+@app.route("/dashboard")
+def dashboard():
+
+    return render_template(
+        "dashboard.html"
     )
 
 

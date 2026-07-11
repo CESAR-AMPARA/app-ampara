@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel de Controle — A.M.P.A.R.A.</title>
+  <meta name="description" content="Acompanhe o credenciamento de profissionais no sistema." />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
+  <style>
+    /* Estilos customizados adicionais para o painel */
+    .dashboard-container {
+      margin-top: 32px;
+      margin-bottom: 64px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--card-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 24px;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+    }
+    .stat-card .value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--navy);
+      font-family: var(--font-serif);
+      margin-bottom: 6px;
+    }
+    .stat-card .label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .users-table-card {
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+    .users-table-card h2 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 1.6rem;
+      color: var(--navy-dark);
+    }
+    .users-table-card .description {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+    .table-responsive {
+      overflow-x: auto;
+    }
+    table.dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+    table.dashboard-table th {
+      padding: 16px;
+      border-bottom: 2px solid var(--border-strong);
+      color: var(--ink-soft);
+      font-weight: 700;
+    }
+    table.dashboard-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .status-badge.pending {
+      background-color: #fcf1d4;
+      color: var(--warn);
+    }
+    .status-badge.approved {
+      background-color: var(--sage-badge);
+      color: var(--sage-badge-tx);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+
+  <!-- Barra de acessibilidade -->
+  <div class="a11y-bar">
+    <div class="wrap">
+      <span class="label">Acessibilidade</span>
+      <nav aria-label="Ferramentas de acessibilidade">
+        <button class="a11y-btn" data-action="font">A+ Aumentar fonte</button>
+        <button class="a11y-btn" data-action="contrast" aria-pressed="false">◐ Alto contraste</button>
+        <button class="a11y-btn" data-action="reader">🔊 Leitor de tela</button>
+        <a class="a11y-btn" href="#conteudo">Ir para o conteúdo</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Cabeçalho -->
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </span>
+      <span>
+        <span class="name">A.M.P.A.R.A.</span>
+        <span class="tagline">Apoio, Monitoramento Psicológico e Acolhimento Responsável ao Aluno</span>
+      </span>
+    </a>
+    <div class="header-actions">
+      <a class="btn btn-outline" href="/">Sair</a>
+    </div>
+  </header>
+
+  <!-- Conteúdo -->
+  <main id="conteudo" class="container dashboard-container">
+    <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Ambiente Protegido e Auditado</span>
+    <h1 style="margin-top: 0; margin-bottom: 24px;">Painel de Credenciamento</h1>
+
+    <!-- Grade de Estatísticas -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="value" id="stat-total">0</div>
+        <div class="label">Total de Profissionais</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="stat-approved" style="color: var(--ok);">0</div>
+        <div class="label">Credenciados / Ativos</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="stat-pending" style="color: var(--warn);">0</div>
+        <div class="label">Aguardando Auditoria</div>
+      </div>
+    </div>
+
+    <!-- Tabela de Usuários -->
+    <div class="users-table-card">
+      <h2>Lista de Profissionais Cadastrados</h2>
+      <p class="description">Revise as informações de cadastro e valide o vínculo profissional de cada usuário antes de conceder acesso ao sistema.</p>
+
+      <div class="table-responsive">
+        <table class="dashboard-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Perfil</th>
+              <th>Escola</th>
+              <th>Status de Validação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr>
+              <td colspan="6" class="empty-state">
+                <div class="icon">🔄</div>
+                <div>Carregando lista de profissionais...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container wrap">
+      <span>© 2026 A.M.P.A.R.A. — Ambiente Protegido &amp; Monitorado</span>
+      <span>Conformidade estrita com a LGPD · Dados sensíveis criptografados</span>
+    </div>
+  </footer>
+
+  <script src="/static/main.js"></script>
+  <script>
+    // JS específico do Dashboard para carregar os dados das APIs do Flask
+    (function() {
+      'use strict';
+
+      async function carregarUsuarios() {
+        try {
+          const res = await fetch('/api/usuarios');
+          const usuarios = await res.json();
+          renderizarUsuarios(usuarios);
+        } catch (err) {
+          console.error('Erro ao carregar usuários:', err);
+          const tbody = document.getElementById('users-tbody');
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-state" style="color: var(--warn);">
+                <div class="icon">⚠️</div>
+                <div>Erro ao conectar ao servidor para buscar dados.</div>
+              </td>
+            </tr>
+          `;
+        }
+      }
+
+      function renderizarUsuarios(usuarios) {
+        const tbody = document.getElementById('users-tbody');
+        if (!usuarios || usuarios.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-state">
+                <div class="icon">📁</div>
+                <div>Nenhum profissional cadastrado até o momento.</div>
+              </td>
+            </tr>
+          `;
+          atualizarEstatisticas(0, 0, 0);
+          return;
+        }
+
+        let total = usuarios.length;
+        let aprovados = 0;
+        let pendentes = 0;
+
+        tbody.innerHTML = '';
+        usuarios.forEach(u => {
+          if (u.validado) aprovados++;
+          else pendentes++;
+
+          const tr = document.createElement('tr');
+          tr.id = `user-row-${u.id}`;
+
+          // Mapeamento semântico do perfil
+          let perfilSemantico = u.perfil;
+          if (u.perfil === 'docente') perfilSemantico = 'Docente';
+          else if (u.perfil === 'equipe') perfilSemantico = 'Equipe Multidisciplinar';
+          else if (u.perfil === 'gestao') perfilSemantico = 'Gestão / Coordenação';
+
+          const statusBadgeHtml = u.validado 
+            ? `<span class="status-badge approved"><span class="dot"></span> Aprovado / Ativo</span>`
+            : `<span class="status-badge pending"><span class="dot"></span> Pendente de Auditoria</span>`;
+
+          const acoesHtml = u.validado
+            ? `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; cursor: not-allowed;" disabled>✓ Já Credenciado</button>`
+            : `<button class="btn btn-primary btn-aprovar" data-id="${u.id}" style="padding: 6px 12px; font-size: 0.8rem;">Aprovar Cadastro</button>`;
+
+          tr.innerHTML = `
+            <td><strong>${escapeHtml(u.nome)}</strong></td>
+            <td>${escapeHtml(u.email)}</td>
+            <td>${escapeHtml(perfilSemantico)}</td>
+            <td>${escapeHtml(u.escola || 'Não especificada')}</td>
+            <td id="status-cell-${u.id}">${statusBadgeHtml}</td>
+            <td id="action-cell-${u.id}">${acoesHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        atualizarEstatisticas(total, aprovados, pendentes);
+        vincularEventosAprovacao();
+      }
+
+      function atualizarEstatisticas(total, aprovados, pendentes) {
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-approved').textContent = aprovados;
+        document.getElementById('stat-pending').textContent = pendentes;
+      }
+
+      function vincularEventosAprovacao() {
+        document.querySelectorAll('.btn-aprovar').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const id = btn.getAttribute('data-id');
+            btn.disabled = true;
+            btn.textContent = 'Processando...';
+
+            try {
+              const res = await fetch(`/api/aprovar/${id}`);
+              const result = await res.json();
+              if (result.sucesso) {
+                // Atualizar célula de status
+                const statusCell = document.getElementById(`status-cell-${id}`);
+                statusCell.innerHTML = `<span class="status-badge approved"><span class="dot"></span> Aprovado / Ativo</span>`;
+
+                // Atualizar célula de ações
+                const actionCell = document.getElementById(`action-cell-${id}`);
+                actionCell.innerHTML = `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; cursor: not-allowed;" disabled>✓ Já Credenciado</button>`;
+
+                // Disparar toast de sucesso (função global em main.js)
+                if (typeof toast === 'function') {
+                  toast('Profissional credenciado com sucesso!');
+                }
+
+                // Recarregar os números estatísticos
+                carregarUsuarios();
+              } else {
+                btn.disabled = false;
+                btn.textContent = 'Aprovar Cadastro';
+                alert('Ocorreu um erro ao aprovar o cadastro.');
+              }
+            } catch (err) {
+              console.error('Erro na aprovação do usuário:', err);
+              btn.disabled = false;
+              btn.textContent = 'Aprovar Cadastro';
+              alert('Erro de conexão ao tentar aprovar o cadastro.');
+            }
+          });
+        });
+      }
+
+      function escapeHtml(text) {
+        if (!text) return '';
+        return text
+          .toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // Iniciar
+      document.addEventListener('DOMContentLoaded', carregarUsuarios);
+    })();
+  </script>
+</body>
+</html>
