@@ -42,7 +42,7 @@ def cadastro():
     )
 
 @app.route("/login")
-def login():
+def login_page():
 
     return render_template(
         "login.html"
