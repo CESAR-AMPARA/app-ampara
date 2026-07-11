@@ -417,6 +417,10 @@ function initWizard(form) {
 
             e.preventDefault();
 
+            if (current !== 3 || (submitBtn && submitBtn.disabled)) {
+                return;
+            }
+
             try {
 
                 const dados = {
@@ -533,6 +537,8 @@ function initWizard(form) {
                 document.getElementById(id);
 
             if (
+                el &&
+                !el.disabled &&
                 !el.value.trim()
             ) {
 
