@@ -5,7 +5,6 @@ Integração com Flask
 
 (function () {
 
-```
 'use strict';
 
 /* ==========================================================
@@ -209,7 +208,7 @@ function initWizard(form) {
             );
 
             chosenRole =
-                card.dataset.role;
+                card.getAttribute("data-role");
 
         });
 
@@ -639,6 +638,7 @@ function toast(msg) {
         }, 3000);
 
 }
-```
+
+window.toast = toast;
 
 })();
