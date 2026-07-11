@@ -13,6 +13,7 @@ from werkzeug.security import (
 from config import Config
 from models import db, Usuario
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
@@ -61,6 +62,9 @@ def dashboard():
 def cadastrar():
 
     dados = request.json
+    # debug
+    db_url = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+    print(db_url)
 
     usuario_existente = Usuario.query.filter_by(
         email=dados["email"]
@@ -98,6 +102,10 @@ def cadastrar():
 
 @app.route("/api/login", methods=["POST"])
 def login():
+
+    # debug
+    db_url = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+    print(db_url)
 
     dados = request.json
 
