@@ -25,4 +25,4 @@ ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
 # Comando para iniciar o servidor de produção Gunicorn na porta 80
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:80", "app:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:80", "--timeout", "120", "app:app"]
