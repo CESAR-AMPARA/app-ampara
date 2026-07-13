@@ -5,6 +5,7 @@ db = SQLAlchemy()
 class Usuario(db.Model):
 
     __tablename__ = "usuarios"
+    __table_args__ = {'extend_existing': True} #  Allows redefining an existing table
 
     id = db.Column(
         db.Integer,
