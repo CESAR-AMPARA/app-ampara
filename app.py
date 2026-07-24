@@ -58,6 +58,22 @@ def dashboard():
     )
 
 
+@app.route("/cadastro_turma")
+def cadastro_turma():
+
+    return render_template(
+        "cadastro_turma.html"
+    )
+
+
+@app.route("/cadastro_estudante")
+def cadastro_estudante():
+
+    return render_template(
+        "cadastro_estudante.html"
+    )
+
+
 @app.route("/api/cadastro", methods=["POST"])
 def cadastrar():
 
