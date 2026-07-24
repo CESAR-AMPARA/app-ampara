@@ -169,11 +169,6 @@
           </select>
         </div>
 
-        <div class="field">
-          <label for="coordenador-turma">Coordenador Responsável <span class="req">*</span></label>
-          <input id="coordenador-turma" class="input-plain" type="text" placeholder="Ex.: Prof. Carlos Alberto" required />
-        </div>
-
         <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;">
           Adicionar Turma
         </button>
@@ -250,9 +245,8 @@
 
         const nome = document.getElementById('nome-turma').value.trim();
         const turno = document.getElementById('turno-turma').value;
-        const coordenador = document.getElementById('coordenador-turma').value.trim();
 
-        if (!nome || !turno || !coordenador) {
+        if (!nome || !turno) {
           if (typeof toast === 'function') {
             toast('Por favor, preencha todos os campos obrigatórios (*).');
           } else {
