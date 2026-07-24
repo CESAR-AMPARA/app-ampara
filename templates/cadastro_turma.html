@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastro de Turmas — A.M.P.A.R.A.</title>
+  <meta name="description" content="Cadastre novas turmas de forma simples ou em lote." />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
+  <style>
+    .registration-container {
+      margin-top: 32px;
+      margin-bottom: 64px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .tabs-nav {
+      display: flex;
+      gap: 16px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 12px 20px;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-bottom-color 0.15s;
+    }
+    .tab-btn:hover {
+      color: var(--navy);
+    }
+    .tab-btn.active {
+      color: var(--navy-dark);
+      border-bottom-color: var(--navy-dark);
+    }
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    .drop-zone {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 48px 24px;
+      text-align: center;
+      background: var(--card-inset);
+      cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s;
+      margin-bottom: 24px;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      background: #fdfaf4;
+      border-color: var(--navy);
+    }
+    .drop-zone .icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+    .drop-zone .text {
+      font-weight: 700;
+      color: var(--ink-soft);
+      font-size: 1.1rem;
+    }
+    .drop-zone .subtext {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .file-info {
+      margin-top: 16px;
+      font-size: 0.95rem;
+      color: var(--sage-badge-tx);
+      font-weight: 700;
+      display: none;
+    }
+    .progress-bar-container {
+      width: 100%;
+      background: var(--border);
+      border-radius: 10px;
+      height: 8px;
+      margin-top: 16px;
+      display: none;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--ok);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+
+  <!-- Barra de acessibilidade -->
+  <div class="a11y-bar">
+    <div class="wrap">
+      <span class="label">Acessibilidade</span>
+      <nav aria-label="Ferramentas de acessibilidade">
+        <button class="a11y-btn" data-action="font">A+ Aumentar fonte</button>
+        <button class="a11y-btn" data-action="contrast" aria-pressed="false">◐ Alto contraste</button>
+        <button class="a11y-btn" data-action="reader">🔊 Leitor de tela</button>
+        <a class="a11y-btn" href="#conteudo">Ir para o conteúdo</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Cabeçalho -->
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </span>
+      <span>
+        <span class="name">A.M.P.A.R.A.</span>
+        <span class="tagline">Apoio, Monitoramento Psicológico e Acolhimento Responsável ao Aluno</span>
+      </span>
+    </a>
+    <div class="header-actions">
+      <a class="btn btn-outline" href="/dashboard">← Voltar ao Painel</a>
+    </div>
+  </header>
+
+  <!-- Conteúdo -->
+  <main id="conteudo" class="container registration-container">
+    <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Administração de Turmas</span>
+    <h1 style="margin-top: 0; margin-bottom: 8px;">Cadastrar Turmas</h1>
+    <p class="description" style="color: var(--muted); margin-bottom: 32px;">Adicione turmas individualmente ou importe uma planilha em lote para poupar tempo.</p>
+
+    <!-- Abas de Navegação -->
+    <div class="tabs-nav" role="tablist" aria-label="Opções de cadastro">
+      <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-manual" id="tab-manual">
+        Cadastro Manual
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-lote" id="tab-lote">
+        Importação em Lote
+      </button>
+    </div>
+
+    <!-- Painel 1: Cadastro Manual -->
+    <div class="tab-panel active" id="panel-manual" role="tabpanel" aria-labelledby="tab-manual">
+      <form id="form-cadastro-turma" class="form-card" novalidate>
+        <h2>Informações da Turma</h2>
+        <p class="sub">Preencha os dados básicos da nova turma para adicioná-la ao sistema.</p>
+
+        <div class="field">
+          <label for="nome-turma">Nome ou Código da Turma <span class="req">*</span></label>
+          <input id="nome-turma" class="input-plain" type="text" placeholder="Ex.: 1º Ano A, 2º Ano B (Técnico)" required />
+        </div>
+
+        <div class="field">
+          <label for="turno-turma">Turno <span class="req">*</span></label>
+          <select id="turno-turma" class="input-plain" required>
+            <option value="" disabled selected>Selecione o turno...</option>
+            <option value="matutino">Matutino (Manhã)</option>
+            <option value="vespertino">Vespertino (Tarde)</option>
+            <option value="noturno">Noturno (Noite)</option>
+            <option value="integral">Integral (Integral)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="coordenador-turma">Coordenador Responsável <span class="req">*</span></label>
+          <input id="coordenador-turma" class="input-plain" type="text" placeholder="Ex.: Prof. Carlos Alberto" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;">
+          Adicionar Turma
+        </button>
+      </form>
+    </div>
+
+    <!-- Painel 2: Importação em Lote -->
+    <div class="tab-panel" id="panel-lote" role="tabpanel" aria-labelledby="tab-lote">
+      <div class="form-card">
+        <h2>Importar Planilha de Turmas</h2>
+        <p class="sub">Selecione ou arraste um arquivo CSV ou Excel (.xlsx) contendo as informações das turmas.</p>
+
+        <div class="drop-zone" id="drop-zone-turma">
+          <div class="icon">📂</div>
+          <div class="text">Arraste e solte o arquivo aqui</div>
+          <div class="subtext">ou clique para selecionar do seu dispositivo</div>
+          <div class="subtext" style="font-size: 0.78rem; margin-top: 10px;">Formatos aceitos: .csv, .xlsx · Tamanho máximo: 5MB</div>
+          <input type="file" id="file-input-turma" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display: none;" />
+        </div>
+
+        <div class="file-info" id="file-info-turma">
+          Arquivo selecionado: <span id="file-name-turma"></span>
+        </div>
+
+        <div class="progress-bar-container" id="progress-container-turma">
+          <div class="progress-bar-fill" id="progress-fill-turma"></div>
+        </div>
+
+        <button type="button" class="btn btn-primary" id="btn-importar-turma" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;" disabled>
+          Processar Importação
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="site-footer">
+    <div class="container wrap">
+      <span>© 2026 A.M.P.A.R.A. — Ambiente Protegido &amp; Monitorado</span>
+      <span>Conformidade estrita com a LGPD · Dados sensíveis criptografados</span>
+    </div>
+  </footer>
+
+  <script src="/static/main.js"></script>
+  <script>
+    // JS interativo para a página de Turmas
+    (function() {
+      'use strict';
+
+      // Gerenciamento de Abas (Tabs)
+      const tabs = document.querySelectorAll('.tab-btn');
+      const panels = document.querySelectorAll('.tab-panel');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const target = tab.getAttribute('aria-controls');
+
+          tabs.forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          panels.forEach(p => p.classList.remove('active'));
+
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+          document.getElementById(target).classList.add('active');
+        });
+      });
+
+      // Validação do Formulário Manual
+      const form = document.getElementById('form-cadastro-turma');
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const nome = document.getElementById('nome-turma').value.trim();
+        const turno = document.getElementById('turno-turma').value;
+        const coordenador = document.getElementById('coordenador-turma').value.trim();
+
+        if (!nome || !turno || !coordenador) {
+          if (typeof toast === 'function') {
+            toast('Por favor, preencha todos os campos obrigatórios (*).');
+          } else {
+            alert('Por favor, preencha todos os campos obrigatórios (*).');
+          }
+          return;
+        }
+
+        // Simular sucesso
+        if (typeof toast === 'function') {
+          toast(`Turma "${nome}" adicionada com sucesso!`);
+        } else {
+          alert(`Turma "${nome}" adicionada com sucesso!`);
+        }
+
+        form.reset();
+      });
+
+      // Importação de Arquivos em Lote
+      const dropZone = document.getElementById('drop-zone-turma');
+      const fileInput = document.getElementById('file-input-turma');
+      const fileInfo = document.getElementById('file-info-turma');
+      const fileNameSpan = document.getElementById('file-name-turma');
+      const progressContainer = document.getElementById('progress-container-turma');
+      const progressFill = document.getElementById('progress-fill-turma');
+      const btnImportar = document.getElementById('btn-importar-turma');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+          handleFileSelected(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+          handleFileSelected(fileInput.files[0]);
+        }
+      });
+
+      function handleFileSelected(file) {
+        const allowedExtensions = /(\.csv|\.xlsx)$/i;
+        if (!allowedExtensions.exec(file.name)) {
+          if (typeof toast === 'function') {
+            toast('Extensão de arquivo inválida. Apenas CSV e Excel são aceitos.');
+          } else {
+            alert('Extensão de arquivo inválida. Apenas CSV e Excel são aceitos.');
+          }
+          btnImportar.disabled = true;
+          fileInfo.style.display = 'none';
+          return;
+        }
+
+        fileNameSpan.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        fileInfo.style.display = 'block';
+        btnImportar.disabled = false;
+        
+        // Reset progress
+        progressContainer.style.display = 'none';
+        progressFill.style.width = '0%';
+      }
+
+      btnImportar.addEventListener('click', () => {
+        btnImportar.disabled = true;
+        progressContainer.style.display = 'block';
+        
+        let width = 0;
+        const interval = setInterval(() => {
+          if (width >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              if (typeof toast === 'function') {
+                toast('Planilha de turmas importada com sucesso!');
+              } else {
+                alert('Planilha de turmas importada com sucesso!');
+              }
+              // Reset
+              fileInfo.style.display = 'none';
+              progressContainer.style.display = 'none';
+              progressFill.style.width = '0%';
+              fileInput.value = '';
+            }, 500);
+          } else {
+            width += 5;
+            progressFill.style.width = width + '%';
+          }
+        }, 100);
+      });
+    })();
+  </script>
+</body>
+</html>
