@@ -7,8 +7,8 @@ A.M.P.A.R.A. (Apoio, Monitoramento Psicológico e Acolhimento Responsável ao Al
 - **Primary Goal:** Focus on preventive care to identify psychological risks early, while providing integrated management that centralizes communication between school staff and health professionals.
 
 ## Key Features
-- **Current Capabilities:** Secure institutional login, multistep onboarding (wizard), and an administrative dashboard for user approval.
-- **Upcoming Features:** Comprehensive registration and management of schools, classes, and individual students.
+- **Current Capabilities:** Secure institutional login, multistep onboarding (wizard), an administrative dashboard for user approval, and interactive Class and Student registration screen prototypes (including manual form entries and bulk spreadsheet imports).
+- **Upcoming Features:** Backend and database integration for the registration and management of schools, classes, and students.
 
 ## Privacy & Security
 - **LGPD Compliance:** Strict anonymization is enforced. Only authorized multidisciplinary teams have access to personally identifiable information (PII) and real names, ensuring that sensitive health and behavioral data is protected from unauthorized staff.
