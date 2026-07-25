@@ -110,6 +110,83 @@
         grid-template-columns: 1fr;
       }
     }
+    
+    /* Estilos para a sidebar e cards de turma do professor */
+    .btn-sidebar {
+      background: none;
+      border: none;
+      text-align: left;
+      width: 100%;
+      padding: 10px 14px;
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--ink-soft);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background-color 0.15s, color 0.15s;
+    }
+    .btn-sidebar:hover {
+      background: var(--bg);
+      color: var(--navy);
+    }
+    .btn-sidebar.active {
+      background: var(--navy-dark);
+      color: #fff;
+    }
+    .class-select-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--navy);
+    }
+    .student-card {
+      background: var(--card-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      box-shadow: var(--shadow-soft);
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .student-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+    }
+    .emotion-badge-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 12px 0 16px;
+    }
+    .emotion-btn {
+      background: var(--input-bg);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--ink-soft);
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .emotion-btn:hover {
+      border-color: var(--navy);
+      background: #fdfaf4;
+    }
+    .emotion-btn.active {
+      background-color: var(--lavender-soft);
+      border-color: var(--navy);
+      color: var(--navy-dark);
+    }
+    .emotion-btn.active[data-emotion="ansiedade"] { background-color: #fce4d6; border-color: #e27a3f; color: #a04313; }
+    .emotion-btn.active[data-emotion="tristeza"] { background-color: #d9e1f2; border-color: #418ab3; color: #164a6f; }
+    .emotion-btn.active[data-emotion="agitacao"] { background-color: #fee6c2; border-color: #dd8e1c; color: #885300; }
+    .emotion-btn.active[data-emotion="apatia"] { background-color: #f2f2f2; border-color: #a6a6a6; color: #595959; }
+    .emotion-btn.active[data-emotion="euforia"] { background-color: #e2f0d9; border-color: #70ad47; color: #385723; }
   </style>
 </head>
 <body>
@@ -147,56 +224,178 @@
   <!-- Conteúdo -->
   <main id="conteudo" class="container dashboard-container">
     <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Ambiente Protegido e Auditado</span>
-    <h1 style="margin-top: 0; margin-bottom: 24px;">Painel de Credenciamento</h1>
+    <h1 style="margin-top: 0; margin-bottom: 24px;" id="dashboard-title">Painel de Credenciamento</h1>
 
-    <!-- Ações de Gerenciamento -->
-    <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
-      <a class="btn btn-outline" href="/cadastro_turma">📂 Cadastrar Turmas</a>
-      <a class="btn btn-outline" href="/cadastro_estudante">🎓 Cadastrar Estudantes</a>
-    </div>
-
-    <!-- Grade de Estatísticas -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="value" id="stat-total">0</div>
-        <div class="label">Total de Profissionais</div>
+    <!-- Seletor de Perfil Simulado (RBAC Switcher) -->
+    <div class="form-card" style="padding: 16px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--card-inset); border-color: var(--border-strong);">
+      <div>
+        <strong style="display: block; font-size: 0.95rem; color: var(--navy);">Seletor de Perfil Simulado (RBAC)</strong>
+        <span style="font-size: 0.82rem; color: var(--muted);">Alterne entre os perfis para testar as permissões de acesso do Gestor ou Professor.</span>
       </div>
-      <div class="stat-card">
-        <div class="value" id="stat-approved" style="color: var(--ok);">0</div>
-        <div class="label">Credenciados / Ativos</div>
-      </div>
-      <div class="stat-card">
-        <div class="value" id="stat-pending" style="color: var(--warn);">0</div>
-        <div class="label">Aguardando Auditoria</div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn btn-primary" id="btn-rbac-gestor" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
+          Gestor Escolar
+        </button>
+        <button type="button" class="btn btn-outline" id="btn-rbac-docente" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
+          Docente (Professor)
+        </button>
       </div>
     </div>
 
-    <!-- Tabela de Usuários -->
-    <div class="users-table-card">
-      <h2>Lista de Profissionais Cadastrados</h2>
-      <p class="description">Revise as informações de cadastro e valide o vínculo profissional de cada usuário antes de conceder acesso ao sistema.</p>
+    <!-- PAINEL GESTOR (Default) -->
+    <div id="panel-gestor">
+      <!-- Ações de Gerenciamento -->
+      <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
+        <a class="btn btn-outline" href="/cadastro_turma">📂 Cadastrar Turmas</a>
+        <a class="btn btn-outline" href="/cadastro_estudante">🎓 Cadastrar Estudantes</a>
+      </div>
 
-      <div class="table-responsive">
-        <table class="dashboard-table">
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Perfil</th>
-              <th>Escola</th>
-              <th>Status de Validação</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="users-tbody">
-            <tr>
-              <td colspan="6" class="empty-state">
-                <div class="icon">🔄</div>
-                <div>Carregando lista de profissionais...</div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Grade de Estatísticas -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="value" id="stat-total">0</div>
+          <div class="label">Total de Profissionais</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" id="stat-approved" style="color: var(--ok);">0</div>
+          <div class="label">Credenciados / Ativos</div>
+        </div>
+        <div class="stat-card">
+          <div class="value" id="stat-pending" style="color: var(--warn);">0</div>
+          <div class="label">Aguardando Auditoria</div>
+        </div>
+      </div>
+
+      <!-- Tabela de Usuários -->
+      <div class="users-table-card">
+        <h2>Lista de Profissionais Cadastrados</h2>
+        <p class="description">Revise as informações de cadastro e valide o vínculo profissional de cada usuário antes de conceder acesso ao sistema.</p>
+
+        <div class="table-responsive">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfil</th>
+                <th>Escola</th>
+                <th>Status de Validação</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr>
+                <td colspan="6" class="empty-state">
+                  <div class="icon">🔄</div>
+                  <div>Carregando lista de profissionais...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAINEL DOCENTE / PROFESSOR (Gestão de Comportamento) -->
+    <div id="panel-docente" style="display: none;">
+      <div style="display: grid; grid-template-columns: 240px 1fr; gap: 28px; margin-top: 24px; align-items: start;">
+        
+        <!-- Sidebar de Turmas -->
+        <aside class="form-card" style="padding: 20px; border-radius: var(--radius-sm); border-color: var(--border); height: fit-content; margin-bottom: 0;">
+          <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.15rem; color: var(--navy-dark); font-family: var(--font-serif);">Minhas Turmas</h3>
+          <nav aria-label="Navegação entre turmas" style="display: flex; flex-direction: column; gap: 8px;">
+            <button type="button" class="btn-sidebar active" data-class="all" id="btn-sidebar-all">
+              📂 Todas as Turmas
+            </button>
+            <button type="button" class="btn-sidebar" data-class="1a">
+              🏫 1º Ano A
+            </button>
+            <button type="button" class="btn-sidebar" data-class="1b">
+              🏫 1º Ano B
+            </button>
+            <button type="button" class="btn-sidebar" data-class="2a">
+              🏫 2º Ano A
+            </button>
+            <button type="button" class="btn-sidebar" data-class="2b">
+              🏫 2º Ano B
+            </button>
+          </nav>
+        </aside>
+
+        <!-- Área Principal do Painel do Professor -->
+        <div>
+          
+          <!-- Visão Geral de Turmas (Cards Grid) -->
+          <div id="teacher-classes-grid">
+            <h2 style="margin-top: 0; margin-bottom: 8px; color: var(--navy);">Visão Geral de Turmas</h2>
+            <p style="color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; margin-top: 0;">Clique em uma de suas turmas vinculadas para visualizar e registrar o comportamento dos estudantes.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
+              
+              <!-- Card Turma 1 -->
+              <div class="form-card class-select-card" data-class="1a" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
+                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
+                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">1º Ano A</h3>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">34</strong> estudantes matriculados</p>
+                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--warn); font-weight: 700;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--warn);"></span>
+                  2 alertas emocionais ativos
+                </div>
+              </div>
+
+              <!-- Card Turma 2 -->
+              <div class="form-card class-select-card" data-class="1b" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
+                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
+                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">1º Ano B</h3>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">30</strong> estudantes matriculados</p>
+                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--ok); font-weight: 700;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok);"></span>
+                  Comportamento estável
+                </div>
+              </div>
+
+              <!-- Card Turma 3 -->
+              <div class="form-card class-select-card" data-class="2a" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
+                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
+                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">2º Ano A</h3>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">28</strong> estudantes matriculados</p>
+                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--warn); font-weight: 700;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--warn);"></span>
+                  1 alerta emocional ativo
+                </div>
+              </div>
+
+              <!-- Card Turma 4 -->
+              <div class="form-card class-select-card" data-class="2b" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
+                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
+                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">2º Ano B</h3>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">32</strong> estudantes matriculados</p>
+                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--ok); font-weight: 700;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok);"></span>
+                  Comportamento estável
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Listagem Detalhada da Turma Selecionada (Student Grid) -->
+          <div id="teacher-class-details" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 12px;">
+              <h2 style="margin: 0; color: var(--navy);" id="selected-class-title">Turma: —</h2>
+              <button type="button" class="btn btn-outline" id="btn-back-to-classes" style="padding: 6px 12px; font-size: 0.85rem;">
+                ← Voltar para Turmas
+              </button>
+            </div>
+            <p id="selected-class-description" style="color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; margin-top: 0;">Lista de estudantes vinculados. Toque nos ícones de sentimentos ou clique em "Registrar Observação" para relatar comportamentos.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;" id="students-grid-container">
+              <!-- Cards dos Alunos serão injetados dinamicamente via JS com suporte a emoções e logs -->
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   </main>
@@ -347,9 +546,472 @@
           .replace(/'/g, "&#039;");
       }
 
+      // ==========================================================
+      // PAINEL DO PROFESSOR (Gestão Comportamental & RBAC)
+      // ==========================================================
+
+      // Banco de Dados Simulado de Estudantes e Turmas
+      const mockStudents = {
+        "1a": [
+          { id: 1, nome: "Lucas Mendes de Oliveira", matricula: "2026.01.0001", activeEmotions: ["ansiedade", "agitacao"], logs: [
+            { date: "15/07/2026 14:32", severity: "medium", text: "Estudante demonstrou inquietação na aula de matemática, andando pela sala repetidamente." }
+          ]},
+          { id: 2, nome: "Ana Beatriz Santos", matricula: "2026.01.0002", activeEmotions: ["apatia"], logs: [] },
+          { id: 3, nome: "Gabriel Silva Costa", matricula: "2026.01.0003", activeEmotions: ["euforia"], logs: [] },
+          { id: 4, nome: "Mariana Rocha Lima", matricula: "2026.01.0004", activeEmotions: [], logs: [] }
+        ],
+        "1b": [
+          { id: 5, nome: "João Pedro Alves", matricula: "2026.01.0101", activeEmotions: ["tristeza"], logs: [
+            { date: "18/07/2026 09:15", severity: "high", text: "Estudante isolou-se dos colegas no intervalo e chorou discretamente na biblioteca." }
+          ]},
+          { id: 6, nome: "Laura Ferreira Gomes", matricula: "2026.01.0102", activeEmotions: [], logs: [] },
+          { id: 7, nome: "Rodrigo Souza Neto", matricula: "2026.01.0103", activeEmotions: [], logs: [] }
+        ],
+        "2a": [
+          { id: 8, nome: "Guilherme Cardoso", matricula: "2026.02.0001", activeEmotions: ["ansiedade"], logs: [] },
+          { id: 9, nome: "Sofia Martins Pinto", matricula: "2026.02.0002", activeEmotions: [], logs: [] }
+        ],
+        "2b": [
+          { id: 10, nome: "Thiago Barbosa", matricula: "2026.02.0101", activeEmotions: [], logs: [] },
+          { id: 11, nome: "Camila Ribeiro Araujo", matricula: "2026.02.0102", activeEmotions: ["euforia"], logs: [] }
+        ]
+      };
+
+      let currentRole = "gestor"; // "gestor" ou "docente"
+      let currentSelectedClass = "all"; // "all" ou id da turma ("1a", etc)
+      let activeStudentForModal = null;
+
+      function inicializarPainelProfessor() {
+        const btnRbacGestor = document.getElementById('btn-rbac-gestor');
+        const btnRbacDocente = document.getElementById('btn-rbac-docente');
+        const panelGestor = document.getElementById('panel-gestor');
+        const panelDocente = document.getElementById('panel-docente');
+        const dashboardTitle = document.getElementById('dashboard-title');
+
+        if (!btnRbacGestor || !btnRbacDocente) return;
+
+        btnRbacGestor.addEventListener('click', () => {
+          currentRole = "gestor";
+          btnRbacGestor.className = "btn btn-primary";
+          btnRbacDocente.className = "btn btn-outline";
+          panelGestor.style.display = "block";
+          panelDocente.style.display = "none";
+          dashboardTitle.textContent = "Painel de Credenciamento";
+        });
+
+        btnRbacDocente.addEventListener('click', () => {
+          currentRole = "docente";
+          btnRbacGestor.className = "btn btn-outline";
+          btnRbacDocente.className = "btn btn-primary";
+          panelGestor.style.display = "none";
+          panelDocente.style.display = "block";
+          dashboardTitle.textContent = "Acompanhamento Comportamental";
+          renderizarTurmasDocente();
+        });
+
+        // Escutar cliques em cards de turma
+        document.querySelectorAll('.class-select-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const classId = card.getAttribute('data-class');
+            currentSelectedClass = classId;
+            renderizarTurmasDocente();
+          });
+        });
+
+        // Escutar cliques na sidebar de turmas
+        document.querySelectorAll('.btn-sidebar').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const classId = btn.getAttribute('data-class');
+            currentSelectedClass = classId;
+            renderizarTurmasDocente();
+          });
+        });
+
+        // Botão voltar na turma
+        const btnBack = document.getElementById('btn-back-to-classes');
+        if (btnBack) {
+          btnBack.addEventListener('click', () => {
+            currentSelectedClass = "all";
+            renderizarTurmasDocente();
+          });
+        }
+
+        inicializarModalEStt();
+      }
+
+      function renderizarTurmasDocente() {
+        const classGrid = document.getElementById('teacher-classes-grid');
+        const classDetails = document.getElementById('teacher-class-details');
+        
+        if (currentSelectedClass === "all") {
+          classGrid.style.display = "block";
+          classDetails.style.display = "none";
+          setActiveSidebarButton("btn-sidebar-all");
+        } else {
+          classGrid.style.display = "none";
+          classDetails.style.display = "block";
+          renderizarDetalhesTurma(currentSelectedClass);
+          setActiveSidebarButton(`btn-sidebar-${currentSelectedClass}`);
+        }
+      }
+
+      function setActiveSidebarButton(id) {
+        document.querySelectorAll('.btn-sidebar').forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.id === id || btn.getAttribute('data-class') === currentSelectedClass) {
+            btn.classList.add('active');
+          }
+        });
+      }
+
+      function renderizarDetalhesTurma(classId) {
+        const titleEl = document.getElementById('selected-class-title');
+        const gridContainer = document.getElementById('students-grid-container');
+        
+        const classNameMap = {
+          "1a": "1º Ano A",
+          "1b": "1º Ano B",
+          "2a": "2º Ano A",
+          "2b": "2º Ano B"
+        };
+        
+        titleEl.textContent = `Turma: ${classNameMap[classId]}`;
+        gridContainer.innerHTML = '';
+        
+        const students = mockStudents[classId] || [];
+        students.forEach(student => {
+          const card = document.createElement('div');
+          card.className = 'student-card';
+          
+          const emotions = [
+            { key: "ansiedade", label: "😰 Ansiedade" },
+            { key: "tristeza", label: "😢 Tristeza" },
+            { key: "agitacao", label: "⚡ Agitação" },
+            { key: "apatia", label: "😐 Apatia" },
+            { key: "euforia", label: "🌟 Euforia" }
+          ];
+          
+          let emotionsHtml = '<div class="emotion-badge-group" role="group" aria-label="Estados emocionais ativos">';
+          emotions.forEach(emo => {
+            const isActive = student.activeEmotions.includes(emo.key);
+            emotionsHtml += `
+              <button type="button" class="emotion-btn ${isActive ? 'active' : ''}" data-emotion="${emo.key}" data-student-id="${student.id}" data-class-id="${classId}">
+                ${emo.label}
+              </button>
+            `;
+          });
+          emotionsHtml += '</div>';
+          
+          card.innerHTML = `
+            <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--lavender); color: var(--navy-dark); display: grid; place-items: center; font-weight: 700; font-size: 1.1rem; flex: none; border: 1px solid var(--border-strong);">
+                ${student.nome.charAt(0)}
+              </div>
+              <div>
+                <strong style="display: block; font-size: 1rem; color: var(--ink-soft);">${student.nome}</strong>
+                <span style="font-size: 0.8rem; color: var(--muted);">ID: ${student.matricula}</span>
+              </div>
+            </div>
+            
+            <span style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 800; color: var(--muted);">Sintomas Observados</span>
+            ${emotionsHtml}
+            
+            <button type="button" class="btn btn-primary btn-open-modal" data-student-id="${student.id}" data-class-id="${classId}" style="width: 100%; padding: 10px; font-size: 0.88rem; font-weight: 700;">
+              Registrar Observação
+            </button>
+          `;
+          
+          gridContainer.appendChild(card);
+        });
+        
+        vincularTogglesEmocao();
+        vincularAberturaModal();
+      }
+
+      function vincularTogglesEmocao() {
+        document.querySelectorAll('.emotion-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const studentId = parseInt(btn.getAttribute('data-student-id'));
+            const classId = btn.getAttribute('data-class-id');
+            const emotion = btn.getAttribute('data-emotion');
+            
+            const student = mockStudents[classId].find(s => s.id === studentId);
+            if (student) {
+              const idx = student.activeEmotions.indexOf(emotion);
+              if (idx > -1) {
+                student.activeEmotions.splice(idx, 1);
+                btn.classList.remove('active');
+                if (typeof toast === 'function') toast(`Sintoma de "${emotion}" removido para ${student.nome.split(' ')[0]}.`);
+              } else {
+                student.activeEmotions.push(emotion);
+                btn.classList.add('active');
+                if (typeof toast === 'function') toast(`Sintoma de "${emotion}" ativado para ${student.nome.split(' ')[0]}!`);
+              }
+            }
+          });
+        });
+      }
+
+      function inicializarModalEStt() {
+        const modal = document.getElementById('student-modal');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const formBehavior = document.getElementById('form-behavior-log');
+        const voiceBtn = document.getElementById('btn-voice-input');
+        const descInput = document.getElementById('behavior-description');
+        const voiceStatus = document.getElementById('voice-status');
+
+        if (!modal || !btnCloseModal || !formBehavior || !voiceBtn || !descInput) return;
+
+        btnCloseModal.addEventListener('click', () => {
+          modal.style.display = "none";
+          activeStudentForModal = null;
+        });
+
+        window.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.style.display = "none";
+            activeStudentForModal = null;
+          }
+        });
+
+        // Simulador de Microfone / Voz para Texto (STT)
+        let voiceInterval = null;
+        let isRecording = false;
+
+        voiceBtn.addEventListener('click', () => {
+          if (isRecording) {
+            stopVoiceSimulation();
+            return;
+          }
+          
+          isRecording = true;
+          voiceBtn.style.backgroundColor = "#fee6c2";
+          voiceBtn.style.transform = "scale(1.15)";
+          voiceBtn.textContent = "🛑";
+          voiceStatus.textContent = "🔊 Gravando áudio... fale agora";
+          voiceStatus.style.color = "var(--warn)";
+          voiceStatus.style.fontWeight = "700";
+          
+          const mockTranscripts = [
+            "Estudante demonstrou inquietação e agitação incomum durante o início da aula.",
+            "Demonstrou apatia, recusando-se a realizar as atividades e isolando-se no fundo.",
+            "Apresentou sintomas graves de ansiedade antes da entrega da avaliação psicossocial.",
+            "Demonstrou comportamento colaborativo, comunicando sentimentos de euforia e animação."
+          ];
+          
+          const randomPhrase = mockTranscripts[Math.floor(Math.random() * mockTranscripts.length)];
+          let currentText = descInput.value;
+          if (currentText) currentText += " ";
+          
+          let index = 0;
+          
+          voiceInterval = setInterval(() => {
+            if (index < randomPhrase.length) {
+              currentText += randomPhrase.charAt(index);
+              descInput.value = currentText;
+              index++;
+              descInput.scrollTop = descInput.scrollHeight;
+            } else {
+              stopVoiceSimulation();
+            }
+          }, 35);
+        });
+
+        function stopVoiceSimulation() {
+          if (voiceInterval) {
+            clearInterval(voiceInterval);
+            voiceInterval = null;
+          }
+          isRecording = false;
+          voiceBtn.style.backgroundColor = "var(--sage-badge)";
+          voiceBtn.style.transform = "scale(1)";
+          voiceBtn.textContent = "🎤";
+          voiceStatus.textContent = "Digitando ou gravando por voz...";
+          voiceStatus.style.color = "var(--muted)";
+          voiceStatus.style.fontWeight = "normal";
+          if (typeof toast === 'function') toast("Fala transcrita para texto com sucesso!");
+        }
+
+        // Envio do Relato Comportamental
+        formBehavior.addEventListener('submit', (e) => {
+          e.preventDefault();
+          
+          if (!activeStudentForModal) return;
+          
+          const text = descInput.value.trim();
+          const severity = document.querySelector('input[name="severity"]:checked').value;
+          
+          if (!text) {
+            if (typeof toast === 'function') {
+              toast("Por favor, preencha o relato de comportamento.");
+            } else {
+              alert("Por favor, preencha o relato de comportamento.");
+            }
+            return;
+          }
+          
+          const now = new Date();
+          const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+          
+          const { student, classId } = activeStudentForModal;
+          
+          const newLog = {
+            date: formattedDate,
+            severity,
+            text
+          };
+          
+          student.logs.unshift(newLog);
+          
+          if (typeof toast === 'function') {
+            toast(`Anotação adicionada para ${student.nome.split(' ')[0]}!`);
+          } else {
+            alert(`Anotação adicionada para ${student.nome.split(' ')[0]}!`);
+          }
+          
+          modal.style.display = "none";
+          activeStudentForModal = null;
+          
+          // Rerenderizar
+          renderizarDetalhesTurma(classId);
+        });
+      }
+
+      function vincularAberturaModal() {
+        const modal = document.getElementById('student-modal');
+        const descInput = document.getElementById('behavior-description');
+
+        document.querySelectorAll('.btn-open-modal').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const studentId = parseInt(btn.getAttribute('data-student-id'));
+            const classId = btn.getAttribute('data-class-id');
+            
+            const student = mockStudents[classId].find(s => s.id === studentId);
+            if (student) {
+              activeStudentForModal = { student, classId };
+              
+              document.getElementById('modal-student-name').textContent = student.nome;
+              document.getElementById('modal-student-matricula').textContent = `Matrícula: ${student.matricula}`;
+              descInput.value = '';
+              document.querySelector('input[name="severity"][value="low"]').checked = true;
+              
+              renderizarLinhaDoTempo(student.logs);
+              
+              modal.style.display = "flex";
+              descInput.focus();
+            }
+          });
+        });
+      }
+
+      function renderizarLinhaDoTempo(logs) {
+        const timeline = document.getElementById('modal-logs-timeline');
+        if (!logs || logs.length === 0) {
+          timeline.innerHTML = `
+            <div style="text-align: center; color: var(--muted); padding: 16px 0; font-size: 0.88rem;">
+              Nenhuma anotação comportamental registrada anteriormente.
+            </div>
+          `;
+          return;
+        }
+        
+        timeline.innerHTML = '';
+        logs.forEach(log => {
+          const item = document.createElement('div');
+          item.style.cssText = "border-left: 3px solid var(--border-strong); padding-left: 12px; margin-bottom: 8px;";
+          
+          let sevLabel = "Baixa";
+          let sevColor = "var(--ok)";
+          if (log.severity === "medium") {
+            sevLabel = "Média";
+            sevColor = "var(--warn)";
+          } else if (log.severity === "high") {
+            sevLabel = "Alta";
+            sevColor = "#b06a4f";
+          }
+          
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 4px;">
+              <span>📅 ${log.date}</span>
+              <strong style="color: ${sevColor};">Gravidade: ${sevLabel}</strong>
+            </div>
+            <p style="margin: 0; font-size: 0.88rem; color: var(--ink-soft);">${escapeHtml(log.text)}</p>
+          `;
+          timeline.appendChild(item);
+        });
+      }
+
       // Iniciar
-      document.addEventListener('DOMContentLoaded', carregarUsuarios);
+      document.addEventListener('DOMContentLoaded', () => {
+        carregarUsuarios();
+        inicializarPainelProfessor();
+      });
     })();
   </script>
+  <!-- Modal: Registro Comportamental do Estudante -->
+  <div id="student-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
+    <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 550px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
+      
+      <!-- Botão Fechar -->
+      <button type="button" id="btn-close-modal" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
+      
+      <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Registro Psicossocial</span>
+      <h2 style="margin-top: 0; margin-bottom: 4px;" id="modal-student-name">Lucas Mendes</h2>
+      <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0; margin-bottom: 24px;" id="modal-student-matricula">Matrícula: —</p>
+
+      <form id="form-behavior-log" novalidate>
+        
+        <!-- Gravidade -->
+        <div class="field">
+          <label style="margin-bottom: 8px;">Nível de Gravidade <span class="req">*</span></label>
+          <div style="display: flex; gap: 10px;">
+            <label class="check-row" style="margin: 0; background: var(--input-bg); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <input type="radio" name="severity" value="low" checked style="margin: 0;" />
+              <span>Baixo</span>
+            </label>
+            <label class="check-row" style="margin: 0; background: var(--input-bg); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <input type="radio" name="severity" value="medium" style="margin: 0;" />
+              <span style="color: var(--warn); font-weight: 700;">Médio</span>
+            </label>
+            <label class="check-row" style="margin: 0; background: var(--input-bg); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <input type="radio" name="severity" value="high" style="margin: 0;" />
+              <span style="color: #b06a4f; font-weight: 700;">Alto</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Relato -->
+        <div class="field">
+          <div class="field-head">
+            <label for="behavior-description">Descrição do Comportamento <span class="req">*</span></label>
+            <span style="font-size: 0.78rem; color: var(--muted);" id="voice-status">Digitando ou gravando por voz...</span>
+          </div>
+          
+          <div style="position: relative;">
+            <textarea id="behavior-description" class="input-plain" style="height: 120px; padding: 12px; padding-right: 48px; resize: none; font-family: inherit;" placeholder="Descreva as observações sobre o comportamento do estudante..." required></textarea>
+            
+            <!-- Botão de Microfone (STT Simulator) -->
+            <button type="button" id="btn-voice-input" aria-label="Inserir por voz" style="position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border-radius: 50%; background: var(--sage-badge); border: 1px solid var(--sage); color: var(--sage-badge-tx); display: grid; place-items: center; cursor: pointer; transition: background-color 0.15s, transform 0.15s; font-size: 1rem;">
+              🎤
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700;">
+          Salvar Registro
+        </button>
+      </form>
+
+      <!-- Linha do Tempo de Histórico (Timeline) -->
+      <div style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+        <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 1.1rem; color: var(--navy-dark); font-family: var(--font-serif);">Histórico de Registros</h3>
+        <div id="modal-logs-timeline" style="display: flex; flex-direction: column; gap: 16px; max-height: 200px; overflow-y: auto; padding-right: 8px;">
+          <!-- Logs serão renderizados dinamicamente -->
+        </div>
+      </div>
+
+    </div>
+  </div>
 </body>
 </html>
