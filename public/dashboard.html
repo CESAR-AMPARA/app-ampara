@@ -272,7 +272,7 @@
     <h1 style="margin-top: 0; margin-bottom: 24px;" id="dashboard-title">Painel de Credenciamento</h1>
 
     <!-- Seletor de Perfil Simulado (RBAC Switcher) -->
-    <div class="form-card" style="padding: 16px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--card-inset); border-color: var(--border-strong);">
+    <div class="form-card" id="rbac-switcher-box" style="padding: 16px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--card-inset); border-color: var(--border-strong);">
       <div>
         <strong style="display: block; font-size: 0.95rem; color: var(--navy);">Seletor de Perfil Simulado (RBAC)</strong>
         <span style="font-size: 0.82rem; color: var(--muted);">Alterne entre os perfis para testar as permissões de acesso do Gestor ou Professor.</span>
@@ -1537,9 +1537,47 @@
 
       // Iniciar
       document.addEventListener('DOMContentLoaded', () => {
-        carregarUsuarios();
-        inicializarPainelProfessor();
-        inicializarPainelCoordenacao();
+        const usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado"));
+        const switcherBox = document.getElementById('rbac-switcher-box');
+        const btnSair = document.querySelector('.site-header .header-actions a');
+
+        // Limpar cache ao fazer logout (Sair)
+        if (btnSair) {
+          btnSair.addEventListener('click', () => {
+            sessionStorage.clear();
+            localStorage.clear();
+          });
+        }
+
+        if (usuarioLogado) {
+          if (usuarioLogado.perfil === "docente") {
+            // Esconder switcher RBAC (Professores somente como professores não devem poder escolher perfil RBAC)
+            if (switcherBox) switcherBox.style.display = "none";
+            
+            // Forçar exibição apenas do painel docente
+            document.getElementById('panel-gestor').style.display = "none";
+            document.getElementById('panel-docente').style.display = "block";
+            document.getElementById('dashboard-title').textContent = "Acompanhamento Comportamental";
+            
+            currentRole = "docente";
+            renderizarTurmasDocente();
+          } else {
+            // Se for coordenador (gestao)
+            if (switcherBox) switcherBox.style.display = "flex";
+            currentRole = "gestor";
+            carregarUsuarios();
+            inicializarPainelProfessor();
+            inicializarPainelCoordenacao();
+          }
+        } else {
+          // Se não houver login (acessando URL direto para teste/revisão)
+          // Default para gestor, mas mostra o switcher para facilitar testes do desenvolvedor
+          if (switcherBox) switcherBox.style.display = "flex";
+          currentRole = "gestor";
+          carregarUsuarios();
+          inicializarPainelProfessor();
+          inicializarPainelCoordenacao();
+        }
       });
     })();
   </script>

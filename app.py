@@ -119,14 +119,39 @@ def cadastrar():
 @app.route("/api/login", methods=["POST"])
 def login():
 
-    # debug
-    db_url = os.environ.get("DATABASE_URL", "sqlite:///app.db")
-    print(db_url)
-
     dados = request.json
+    email_input = dados.get("email")
+    senha_input = dados.get("senha")
 
+    # 1. Verificar no credentials.json primeiro (para simulação de perfis)
+    import json
+    if os.path.exists("credentials.json"):
+        try:
+            with open("credentials.json", "r", encoding="utf-8") as f:
+                creds = json.load(f)
+                if email_input in creds:
+                    user_info = creds[email_input]
+                    if user_info.get("senha") == senha_input:
+                        return jsonify({
+                            "sucesso": True,
+                            "usuario": {
+                                "nome": user_info.get("nome"),
+                                "email": email_input,
+                                "perfil": user_info.get("perfil"),
+                                "escola": user_info.get("escola")
+                            }
+                        })
+                    else:
+                        return jsonify({
+                            "sucesso": False,
+                            "mensagem": "Senha inválida."
+                        })
+        except Exception as e:
+            print(f"Erro ao carregar credentials.json: {e}")
+
+    # 2. Fallback para banco de dados tradicional
     usuario = Usuario.query.filter_by(
-        email=dados["email"]
+        email=email_input
     ).first()
 
     if not usuario:
@@ -138,7 +163,7 @@ def login():
 
     if not check_password_hash(
         usuario.senha_hash,
-        dados["senha"]
+        senha_input
     ):
 
         return jsonify({
