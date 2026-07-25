@@ -58,10 +58,51 @@
   /* -------------------- Login (demo) -------------------- */
   var loginForm = document.getElementById('loginForm');
   if (loginForm) {
+    // Limpar cache atual para simulação limpa
+    sessionStorage.clear();
+    localStorage.clear();
+
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!loginForm.checkValidity()) { loginForm.reportValidity(); return; }
-      toast('Autenticando… (demonstração de front-end — sem back-end conectado).');
+      
+      var email = document.getElementById('email').value.trim();
+      var senha = document.getElementById('senha').value;
+
+      var mockCreds = {
+        "professor@ampara.gov.br": {
+          "nome": "Prof. Ricardo Souza",
+          "perfil": "docente",
+          "escola": "Escola Estadual Castro Alves",
+          "senha": "senha123"
+        },
+        "coordenador@ampara.gov.br": {
+          "nome": "Coordenadora Márcia Silva",
+          "perfil": "gestao",
+          "escola": "Escola Estadual Castro Alves",
+          "senha": "senha123"
+        }
+      };
+
+      if (email in mockCreds) {
+        var user = mockCreds[email];
+        if (user.senha === senha) {
+          sessionStorage.setItem("usuarioLogado", JSON.stringify({
+            "nome": user.nome,
+            "email": email,
+            "perfil": user.perfil,
+            "escola": user.escola
+          }));
+          toast('Login realizado. Redirecionando…');
+          setTimeout(function() {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+        } else {
+          toast('Senha inválida.');
+        }
+      } else {
+        toast('E-mail ou senha inválidos.');
+      }
     });
   }
 

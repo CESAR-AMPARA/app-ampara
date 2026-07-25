@@ -109,6 +109,10 @@ const loginForm =
 
 if (loginForm) {
 
+    // Limpar cache atual para simulação limpa
+    sessionStorage.clear();
+    localStorage.clear();
+
     loginForm.addEventListener(
         "submit",
         async function (e) {
@@ -141,6 +145,9 @@ if (loginForm) {
                     await resposta.json();
 
                 if (resultado.sucesso) {
+
+                    // Salvar o perfil logado no sessionStorage para guiar o RBAC do dashboard
+                    sessionStorage.setItem("usuarioLogado", JSON.stringify(resultado.usuario));
 
                     toast("Login realizado.");
 
