@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Implemente, usando o agente desginer e dev front, o Dashboard da Coordenação com buscas em tempo real, aprovação e adição de professores, e registro de ocorrências escolares**
+- [x] **Track: Implemente, usando o agente desginer e dev front, o Dashboard da Coordenação com buscas em tempo real, aprovação e adição de professores, e registro de ocorrências escolares**
   *Link: [./tracks/coordinator_dashboard_20260724/](./tracks/coordinator_dashboard_20260724/)*
