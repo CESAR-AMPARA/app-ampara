@@ -1,0 +1,8 @@
+{
+  "track_id": "teacher_dashboard_20260724",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-24T13:00:00Z",
+  "updated_at": "2026-07-24T13:00:00Z",
+  "description": "Implemente, usando o agente desginer e dev front, o Dashboard do Professor com gestão comportamental de estudantes, RBAC, cards de emoção e popups com Voice STT"
+}
