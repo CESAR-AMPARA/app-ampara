@@ -187,6 +187,51 @@
     .emotion-btn.active[data-emotion="agitacao"] { background-color: #fee6c2; border-color: #dd8e1c; color: #885300; }
     .emotion-btn.active[data-emotion="apatia"] { background-color: #f2f2f2; border-color: #a6a6a6; color: #595959; }
     .emotion-btn.active[data-emotion="euforia"] { background-color: #e2f0d9; border-color: #70ad47; color: #385723; }
+    
+    /* Estilos adicionais para o painel da Coordenação */
+    .gestor-tab-panel {
+      display: none;
+    }
+    .gestor-tab-panel.active {
+      display: block;
+    }
+    .search-row-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .coordinator-occurrence-card {
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+    }
+    .search-card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .search-item-box {
+      background: var(--card-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .search-item-box:hover {
+      border-color: var(--navy);
+      background-color: #fdfaf4;
+    }
+    @media (max-width: 768px) {
+      .search-row-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -244,56 +289,143 @@
 
     <!-- PAINEL GESTOR (Default) -->
     <div id="panel-gestor">
-      <!-- Ações de Gerenciamento -->
-      <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
-        <a class="btn btn-outline" href="cadastro_turma.html">📂 Cadastrar Turmas</a>
-        <a class="btn btn-outline" href="cadastro_estudante.html">🎓 Cadastrar Estudantes</a>
+      
+      <!-- Abas de Navegação Interna da Coordenação -->
+      <div class="tabs-nav" role="tablist" aria-label="Abas da Coordenação" style="margin-bottom: 24px;">
+        <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="gestor-tab-credenciamento" id="btn-gestor-tab-credenciamento" style="font-size: 0.95rem; padding: 10px 16px;">
+          👥 Credenciamento &amp; Equipe
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="gestor-tab-busca" id="btn-gestor-tab-busca" style="font-size: 0.95rem; padding: 10px 16px;">
+          🔍 Busca &amp; Registros
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="gestor-tab-ocorrencias" id="btn-gestor-tab-ocorrencias" style="font-size: 0.95rem; padding: 10px 16px;">
+          ⚠️ Ocorrências da Coordenação
+        </button>
       </div>
 
-      <!-- Grade de Estatísticas -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="value" id="stat-total">0</div>
-          <div class="label">Total de Profissionais</div>
+      <!-- ABA 1: CREDENCIAMENTO -->
+      <div class="gestor-tab-panel active" id="gestor-tab-credenciamento">
+        <!-- Ações de Gerenciamento -->
+        <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
+          <a class="btn btn-outline" href="cadastro_turma.html">📂 Cadastrar Turmas</a>
+          <a class="btn btn-outline" href="cadastro_estudante.html">🎓 Cadastrar Estudantes</a>
+          <button type="button" class="btn btn-outline" id="btn-open-add-teacher">👤 Adicionar Professor</button>
         </div>
-        <div class="stat-card">
-          <div class="value" id="stat-approved" style="color: var(--ok);">0</div>
-          <div class="label">Credenciados / Ativos</div>
+
+        <!-- Grade de Estatísticas -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="value" id="stat-total">0</div>
+            <div class="label">Total de Profissionais</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="stat-approved" style="color: var(--ok);">0</div>
+            <div class="label">Credenciados / Ativos</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="stat-pending" style="color: var(--warn);">0</div>
+            <div class="label">Aguardando Auditoria</div>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="value" id="stat-pending" style="color: var(--warn);">0</div>
-          <div class="label">Aguardando Auditoria</div>
+
+        <!-- Tabela de Usuários -->
+        <div class="users-table-card">
+          <h2>Lista de Profissionais Cadastrados</h2>
+          <p class="description">Revise as informações de cadastro e valide o vínculo profissional de cada usuário antes de conceder acesso ao sistema.</p>
+
+          <div class="table-responsive">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                  <th>Escola</th>
+                  <th>Status de Validação</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <tr>
+                  <td colspan="6" class="empty-state">
+                    <div class="icon">🔄</div>
+                    <div>Carregando lista de profissionais...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- Tabela de Usuários -->
-      <div class="users-table-card">
-        <h2>Lista de Profissionais Cadastrados</h2>
-        <p class="description">Revise as informações de cadastro e valide o vínculo profissional de cada usuário antes de conceder acesso ao sistema.</p>
+      <!-- ABA 2: BUSCA & REGISTROS -->
+      <div class="gestor-tab-panel" id="gestor-tab-busca" style="display: none;">
+        <div class="search-row-grid">
+          
+          <!-- Busca de Turmas -->
+          <div class="form-card">
+            <h2>Pesquisar Turmas</h2>
+            <p class="sub">Busque por nome da turma para ver estudantes e alertas em tempo real.</p>
+            <div class="field" style="margin-bottom: 24px;">
+              <input type="text" id="search-classes-input" class="input-plain" placeholder="Ex: 1º Ano..." />
+            </div>
+            <div class="search-card-list" id="search-classes-results-container">
+              <!-- Resultados de Turmas serão injetados dinamicamente -->
+            </div>
+          </div>
 
-        <div class="table-responsive">
-          <table class="dashboard-table">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Perfil</th>
-                <th>Escola</th>
-                <th>Status de Validação</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="users-tbody">
-              <tr>
-                <td colspan="6" class="empty-state">
-                  <div class="icon">🔄</div>
-                  <div>Carregando lista de profissionais...</div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <!-- Busca de Estudantes -->
+          <div class="form-card">
+            <h2>Pesquisar Estudantes</h2>
+            <p class="sub">Pesquise estudantes para analisar todo o histórico de anotações.</p>
+            <div class="field" style="margin-bottom: 24px;">
+              <input type="text" id="search-students-input" class="input-plain" placeholder="Ex: Lucas, 2026.01..." />
+            </div>
+            <div class="search-card-list" id="search-students-results-container">
+              <!-- Resultados de Estudantes serão injetados dinamicamente -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Exibição Detalhada da Linha do Tempo do Estudante na Busca -->
+        <div class="form-card" id="search-student-timeline-box" style="display: none; margin-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <span class="badge" style="margin-bottom: 4px;"><span class="dot"></span> Prontuário Psicossocial</span>
+              <h2 style="margin: 0;" id="search-timeline-student-name">Lucas Mendes de Oliveira</h2>
+              <p style="margin: 0; font-size: 0.88rem; color: var(--muted);" id="search-timeline-student-id">Matrícula: 2026.01.0001</p>
+            </div>
+            <button type="button" class="btn btn-outline" id="btn-close-search-timeline" style="padding: 6px 12px; font-size: 0.85rem;">Fechar</button>
+          </div>
+          <div style="border-top: 1px solid var(--border); padding-top: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 1.15rem; color: var(--navy-dark); font-family: var(--font-serif);">Linha do Tempo Comportamental</h3>
+            <div id="search-timeline-logs-container" style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Logs do prontuário serão renderizados -->
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- ABA 3: OCORRÊNCIAS DA COORDENAÇÃO -->
+      <div class="gestor-tab-panel" id="gestor-tab-ocorrencias" style="display: none;">
+        <div class="form-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <h2 style="margin: 0;">Ocorrências Escolares Registradas</h2>
+              <p class="sub" style="margin: 0; margin-top: 4px;">Acompanhe ou registre intervenções graves tomadas pela gestão/coordenação escolar.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btn-open-occurrence" style="padding: 12px 20px; font-weight: 700;">
+              ⚠️ Registrar Ocorrência
+            </button>
+          </div>
+
+          <div style="border-top: 1px solid var(--border); padding-top: 24px;" id="coordination-occurrences-timeline">
+            <!-- Central de ocorrências será injetada aqui -->
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- PAINEL DOCENTE / PROFESSOR (Gestão de Comportamento) -->
@@ -413,11 +545,15 @@
     (function() {
       'use strict';
 
+      let cachedUsuarios = [];
+
       async function carregarUsuarios() {
         try {
-          const res = await fetch('/api/usuarios');
-          const usuarios = await res.json();
-          renderizarUsuarios(usuarios);
+          if (cachedUsuarios.length === 0) {
+            const res = await fetch('/api/usuarios');
+            cachedUsuarios = await res.json();
+          }
+          renderizarUsuarios(cachedUsuarios);
         } catch (err) {
           console.error('Erro ao carregar usuários:', err);
           const tbody = document.getElementById('users-tbody');
@@ -942,10 +1078,468 @@
         });
       }
 
+      // ==========================================================
+      // PAINEL DA COORDENAÇÃO (Busca, Ocorrências, Add Professor)
+      // ==========================================================
+
+      let localOccurrences = [
+        {
+          date: "20/07/2026 10:45",
+          targetType: "student",
+          targetName: "João Pedro Alves (1º Ano B)",
+          type: "Apoio Familiar",
+          action: "Reunião de mediação psicossocial realizada com a mãe do estudante e psicólogo.",
+          description: "Mãe relatou que a família passa por um momento difícil de luto. Foi estabelecido um plano de acolhimento flexível para as próximas avaliações."
+        }
+      ];
+
+      function inicializarPainelCoordenacao() {
+        // Gerenciamento de Sub-Abas do Gestor
+        const tabCredenciamento = document.getElementById('btn-gestor-tab-credenciamento');
+        const tabBusca = document.getElementById('btn-gestor-tab-busca');
+        const tabOcorrencias = document.getElementById('btn-gestor-tab-ocorrencias');
+
+        const panelCredenciamento = document.getElementById('gestor-tab-credenciamento');
+        const panelBusca = document.getElementById('gestor-tab-busca');
+        const panelOcorrencias = document.getElementById('gestor-tab-ocorrencias');
+
+        if (tabCredenciamento && tabBusca && tabOcorrencias) {
+          const gestorTabs = [tabCredenciamento, tabBusca, tabOcorrencias];
+          const gestorPanels = [panelCredenciamento, panelBusca, panelOcorrencias];
+
+          gestorTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+              const targetPanelId = tab.getAttribute('aria-controls');
+
+              gestorTabs.forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('aria-selected', 'false');
+              });
+              gestorPanels.forEach(p => p.classList.remove('active'));
+              gestorPanels.forEach(p => p.style.display = "none");
+
+              tab.classList.add('active');
+              tab.setAttribute('aria-selected', 'true');
+              
+              const targetPanel = document.getElementById(targetPanelId);
+              if (targetPanel) {
+                targetPanel.classList.add('active');
+                targetPanel.style.display = "block";
+              }
+
+              if (targetPanelId === 'gestor-tab-busca') {
+                executarBuscaClasses();
+                executarBuscaEstudantes();
+              } else if (targetPanelId === 'gestor-tab-ocorrencias') {
+                renderizarOcorrenciasCentral();
+              }
+            });
+          });
+        }
+
+        // --- SUB-ABA 1: ADICIONAR PROFESSOR MANUALMENTE ---
+        const btnOpenAddTeacher = document.getElementById('btn-open-add-teacher');
+        const addTeacherModal = document.getElementById('add-teacher-modal');
+        const btnCloseAddTeacher = document.getElementById('btn-close-add-teacher-modal');
+        const formAddTeacher = document.getElementById('form-add-teacher');
+
+        if (btnOpenAddTeacher && addTeacherModal && btnCloseAddTeacher && formAddTeacher) {
+          btnOpenAddTeacher.addEventListener('click', () => {
+            addTeacherModal.style.display = "flex";
+            document.getElementById('add-teacher-nome').focus();
+          });
+
+          btnCloseAddTeacher.addEventListener('click', () => {
+            addTeacherModal.style.display = "none";
+          });
+
+          addTeacherModal.addEventListener('click', (e) => {
+            if (e.target === addTeacherModal) addTeacherModal.style.display = "none";
+          });
+
+          formAddTeacher.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('add-teacher-nome').value.trim();
+            const email = document.getElementById('add-teacher-email').value.trim();
+            const escola = document.getElementById('add-teacher-escola').value.trim();
+
+            if (!nome || !email || !escola) {
+              if (typeof toast === 'function') toast("Por favor, preencha todos os campos.");
+              return;
+            }
+
+            // Criar e inserir novo professor na lista em cache
+            const novoProf = {
+              id: Date.now(),
+              nome: nome,
+              email: email,
+              perfil: "docente",
+              escola: escola,
+              validado: true // Acesso imediato ativado!
+            };
+
+            cachedUsuarios.unshift(novoProf); // Prepend
+            renderizarUsuarios(cachedUsuarios);
+
+            addTeacherModal.style.display = "none";
+            formAddTeacher.reset();
+
+            if (typeof toast === 'function') {
+              toast(`Professor ${nome.split(' ')[0]} cadastrado com acesso ativo!`);
+            }
+          });
+        }
+
+        // --- SUB-ABA 2: BUSCA REAL-TIME EM TURMAS E ESTUDANTES ---
+        const classesInput = document.getElementById('search-classes-input');
+        const studentsInput = document.getElementById('search-students-input');
+
+        if (classesInput) classesInput.addEventListener('input', executarBuscaClasses);
+        if (studentsInput) studentsInput.addEventListener('input', executarBuscaEstudantes);
+
+        // Fechar Prontuário Comportamental
+        const btnCloseTimeline = document.getElementById('btn-close-search-timeline');
+        if (btnCloseTimeline) {
+          btnCloseTimeline.addEventListener('click', () => {
+            document.getElementById('search-student-timeline-box').style.display = "none";
+          });
+        }
+
+        // --- SUB-ABA 3: OCORRÊNCIAS DA COORDENAÇÃO MODAL & SUBMIT ---
+        const btnOpenOccCentral = document.getElementById('btn-open-occurrence');
+        const occModal = document.getElementById('occurrence-modal');
+        const btnCloseOccModal = document.getElementById('btn-close-occurrence-modal');
+        const formOcc = document.getElementById('form-coordination-occurrence');
+        const targetTypeSelect = document.getElementById('occurrence-target-type');
+
+        if (btnOpenOccCentral && occModal && btnCloseOccModal && formOcc && targetTypeSelect) {
+          btnOpenOccCentral.addEventListener('click', () => abrirModalOcorrencia());
+          
+          btnCloseOccModal.addEventListener('click', () => {
+            occModal.style.display = "none";
+          });
+
+          occModal.addEventListener('click', (e) => {
+            if (e.target === occModal) occModal.style.display = "none";
+          });
+
+          // Trocar dinamicamente campos de classe vs estudante
+          targetTypeSelect.addEventListener('change', () => {
+            const val = targetTypeSelect.value;
+            const studentField = document.getElementById('occurrence-target-student-field');
+            const classField = document.getElementById('occurrence-target-class-field');
+
+            if (val === 'student') {
+              studentField.style.display = "block";
+              classField.style.display = "none";
+            } else {
+              studentField.style.display = "none";
+              classField.style.display = "block";
+            }
+          });
+
+          // Enviar Ocorrência
+          formOcc.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const targetType = targetTypeSelect.value;
+            const type = document.getElementById('occurrence-type').value;
+            const action = document.getElementById('occurrence-action').value.trim();
+            const desc = document.getElementById('occurrence-description').value.trim();
+
+            let targetName = "";
+            let classTargetId = null;
+            let studentTargetId = null;
+
+            if (targetType === 'student') {
+              const studentSelect = document.getElementById('occurrence-target-student');
+              if (!studentSelect.value) {
+                if (typeof toast === 'function') toast("Selecione um estudante.");
+                return;
+              }
+              targetName = studentSelect.options[studentSelect.selectedIndex].text;
+              studentTargetId = parseInt(studentSelect.value);
+            } else {
+              const classSelect = document.getElementById('occurrence-target-class');
+              if (!classSelect.value) {
+                if (typeof toast === 'function') toast("Selecione uma turma.");
+                return;
+              }
+              targetName = "Turma: " + classSelect.options[classSelect.selectedIndex].text;
+              classTargetId = classSelect.value;
+            }
+
+            if (!type || !action || !desc) {
+              if (typeof toast === 'function') toast("Por favor, preencha todos os campos.");
+              return;
+            }
+
+            const now = new Date();
+            const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            const novaOcorrencia = {
+              date: formattedDate,
+              targetType,
+              targetName,
+              type,
+              action,
+              description: desc
+            };
+
+            // Prepend a central ocorrências
+            localOccurrences.unshift(novaOcorrencia);
+
+            // Injetar anotação da coordenação diretamente nos logs de Lucas/outros se for Estudante
+            if (targetType === 'student' && studentTargetId) {
+              // Buscar o estudante nas turmas do banco local
+              for (const clId in mockStudents) {
+                const foundStud = mockStudents[clId].find(s => s.id === studentTargetId);
+                if (foundStud) {
+                  foundStud.logs.unshift({
+                    date: formattedDate,
+                    severity: "high", // Ação da coordenação sempre é tratada como alta gravidade/auditoria
+                    text: `[OCORRÊNCIA COORDENAÇÃO - ${type}] Intervenção: ${action}. Descrição: ${desc}`
+                  });
+                  break;
+                }
+              }
+            }
+
+            occModal.style.display = "none";
+            formOcc.reset();
+            targetTypeSelect.value = "student";
+            document.getElementById('occurrence-target-student-field').style.display = "block";
+            document.getElementById('occurrence-target-class-field').style.display = "none";
+
+            if (typeof toast === 'function') toast("Intervenção de ocorrência registrada com sucesso!");
+            renderizarOcorrenciasCentral();
+          });
+        }
+      }
+
+      function abrirModalOcorrencia() {
+        const modal = document.getElementById('occurrence-modal');
+        if (modal) {
+          modal.style.display = "flex";
+          document.getElementById('occurrence-type').focus();
+        }
+      }
+
+      // --- BUSCA DINÂMICA DE TURMAS (REAL-TIME) ---
+      function executarBuscaClasses() {
+        const query = (document.getElementById('search-classes-input').value || "").toLowerCase().trim();
+        const container = document.getElementById('search-classes-results-container');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const classNameMap = {
+          "1a": "1º Ano A",
+          "1b": "1º Ano B",
+          "2a": "2º Ano A",
+          "2b": "2º Ano B"
+        };
+
+        let totalRenders = 0;
+
+        for (const clId in mockStudents) {
+          const className = classNameMap[clId];
+          if (query && !className.toLowerCase().includes(query)) continue;
+
+          const students = mockStudents[clId];
+          const hasAlerts = students.some(s => s.activeEmotions.length > 0);
+
+          const item = document.createElement('div');
+          item.className = 'search-item-box';
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong style="font-size: 1.05rem; color: var(--navy-dark); display: block;">🏫 ${className}</strong>
+                <span style="font-size: 0.82rem; color: var(--muted);">${students.length} estudantes · Coordenador: Prof. Designado</span>
+              </div>
+              <div>
+                <span class="status-badge ${hasAlerts ? 'pending' : 'approved'}" style="font-size: 0.72rem;">
+                  <span class="dot"></span> ${hasAlerts ? 'Alertas de Sintomas' : 'Normal / Estável'}
+                </span>
+              </div>
+            </div>
+            <div class="roster-collapsed" id="search-roster-${clId}" style="display: none; border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px;">
+              <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 8px;">Lista de Estudantes</strong>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                ${students.map(s => `
+                  <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding: 4px 0;">
+                    <span>🎓 ${s.nome}</span>
+                    <span style="color: var(--muted); font-size: 0.8rem;">${s.activeEmotions.length > 0 ? `😰 ${s.activeEmotions.length} ativos` : 'Estável'}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+
+          // Clique no card de turmas expande a lista de alunos
+          item.addEventListener('click', () => {
+            const roster = document.getElementById(`search-roster-${clId}`);
+            if (roster.style.display === "none") {
+              roster.style.display = "block";
+            } else {
+              roster.style.display = "none";
+            }
+          });
+
+          container.appendChild(item);
+          totalRenders++;
+        }
+
+        if (totalRenders === 0) {
+          container.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;">Nenhuma turma encontrada para "${query}".</div>`;
+        }
+      }
+
+      // --- BUSCA DINÂMICA DE ESTUDANTES (REAL-TIME) ---
+      function executarBuscaEstudantes() {
+        const query = (document.getElementById('search-students-input').value || "").toLowerCase().trim();
+        const container = document.getElementById('search-students-results-container');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        const classNameMap = {
+          "1a": "1º Ano A",
+          "1b": "1º Ano B",
+          "2a": "2º Ano A",
+          "2b": "2º Ano B"
+        };
+
+        let totalRenders = 0;
+
+        for (const clId in mockStudents) {
+          const className = classNameMap[clId];
+          const students = mockStudents[clId];
+
+          students.forEach(s => {
+            const matchesQuery = !query || s.nome.toLowerCase().includes(query) || s.matricula.includes(query);
+            if (!matchesQuery) return;
+
+            const item = document.createElement('div');
+            item.className = 'search-item-box';
+            item.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <strong style="font-size: 1.05rem; color: var(--navy-dark); display: block;">🎓 ${s.nome}</strong>
+                  <span style="font-size: 0.82rem; color: var(--muted);">Matrícula: ${s.matricula} · Turma: ${className}</span>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.78rem; font-weight: 700; background: var(--sage-badge); color: var(--sage-badge-tx); border-color: var(--sage);">
+                    📁 Ver Prontuário
+                  </button>
+                </div>
+              </div>
+            `;
+
+            // Clicar no estudante abre a linha de tempo abaixo
+            item.addEventListener('click', () => {
+              abrirLinhaDeTempoBusca(s);
+            });
+
+            container.appendChild(item);
+            totalRenders++;
+          });
+        }
+
+        if (totalRenders === 0) {
+          container.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;">Nenhum estudante encontrado para "${query}".</div>`;
+        }
+      }
+
+      function abrirLinhaDeTempoBusca(student) {
+        const box = document.getElementById('search-student-timeline-box');
+        const nameEl = document.getElementById('search-timeline-student-name');
+        const idEl = document.getElementById('search-timeline-student-id');
+        const logsContainer = document.getElementById('search-timeline-logs-container');
+
+        if (!box || !nameEl || !idEl || !logsContainer) return;
+
+        nameEl.textContent = student.nome;
+        idEl.textContent = `Matrícula: ${student.matricula}`;
+        
+        logsContainer.innerHTML = '';
+        if (!student.logs || student.logs.length === 0) {
+          logsContainer.innerHTML = `
+            <div style="text-align: center; color: var(--muted); padding: 24px 0; font-size: 0.9rem;">
+              Nenhuma anotação comportamental registrada para este estudante.
+            </div>
+          `;
+        } else {
+          student.logs.forEach(log => {
+            const item = document.createElement('div');
+            item.style.cssText = "border-left: 3px solid var(--border-strong); padding-left: 14px; margin-bottom: 4px;";
+            
+            let label = "Baixa";
+            let color = "var(--ok)";
+            if (log.severity === "medium") {
+              label = "Média";
+              color = "var(--warn)";
+            } else if (log.severity === "high") {
+              label = "Alta";
+              color = "#b06a4f";
+            }
+
+            item.innerHTML = `
+              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 4px;">
+                <span>📅 ${log.date}</span>
+                <strong style="color: ${color};">Gravidade: ${label}</strong>
+              </div>
+              <p style="margin: 0; font-size: 0.9rem; color: var(--ink-soft);">${escapeHtml(log.text)}</p>
+            `;
+            logsContainer.appendChild(item);
+          });
+        }
+
+        box.style.display = "block";
+        box.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      // --- CENTRAL DE OCORRÊNCIAS TIMELINE RENDER ---
+      function renderizarOcorrenciasCentral() {
+        const timeline = document.getElementById('coordination-occurrences-timeline');
+        if (!timeline) return;
+
+        if (localOccurrences.length === 0) {
+          timeline.innerHTML = `
+            <div style="text-align: center; color: var(--muted); padding: 32px 0;">
+              <div style="font-size: 3rem; margin-bottom: 12px;">📁</div>
+              <div>Nenhuma ocorrência escolar registrada anteriormente.</div>
+            </div>
+          `;
+          return;
+        }
+
+        timeline.innerHTML = '';
+        localOccurrences.forEach(occ => {
+          const card = document.createElement('div');
+          card.className = 'coordinator-occurrence-card';
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <span class="badge" style="background: #fee6c2; color: #a46c10; font-size: 0.76rem; margin-bottom: 4px;">⚠️ ${occ.type}</span>
+                <h3 style="margin: 4px 0 0; font-size: 1.15rem; color: var(--navy-dark);">${occ.targetName}</h3>
+              </div>
+              <span style="font-size: 0.8rem; color: var(--muted); font-weight: 700;">📅 ${occ.date}</span>
+            </div>
+            <p style="margin: 0 0 14px; font-size: 0.92rem; color: var(--ink-soft); line-height: 1.4;">${escapeHtml(occ.description)}</p>
+            <div style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+              <strong style="color: var(--navy); text-transform: uppercase; font-size: 0.76rem; letter-spacing: 0.04em;">Ação Tomada:</strong>
+              <span style="color: var(--ink-soft); font-weight: 700;">${escapeHtml(occ.action)}</span>
+            </div>
+          `;
+          timeline.appendChild(card);
+        });
+      }
+
       // Iniciar
       document.addEventListener('DOMContentLoaded', () => {
         carregarUsuarios();
         inicializarPainelProfessor();
+        inicializarPainelCoordenacao();
       });
     })();
   </script>
@@ -1011,6 +1605,117 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Modal: Adicionar Professor Manualmente -->
+  <div id="add-teacher-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
+    <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 500px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
+      
+      <button type="button" id="btn-close-add-teacher-modal" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
+      
+      <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Cadastro de Professor</span>
+      <h2 style="margin-top: 0; margin-bottom: 4px;">Adicionar Professor à Rede</h2>
+      <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0; margin-bottom: 24px;">Registre um docente confiável diretamente no sistema, ativando seu acesso imediato.</p>
+
+      <form id="form-add-teacher" novalidate>
+        <div class="field">
+          <label for="add-teacher-nome">Nome Completo <span class="req">*</span></label>
+          <input id="add-teacher-nome" class="input-plain" type="text" placeholder="Ex.: Prof. Ricardo Souza Araujo" required />
+        </div>
+
+        <div class="field">
+          <label for="add-teacher-email">E-mail Institucional <span class="req">*</span></label>
+          <input id="add-teacher-email" class="input-plain" type="email" placeholder="Ex.: ricardo.araujo@ampara.edu.gov.br" required />
+        </div>
+
+        <div class="field">
+          <label for="add-teacher-escola">Escola Vinculada <span class="req">*</span></label>
+          <input id="add-teacher-escola" class="input-plain" type="text" placeholder="Ex.: Escola Estadual Castro Alves" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;">
+          Cadastrar Professor
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Registrar Ocorrência da Coordenação -->
+  <div id="occurrence-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
+    <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 550px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
+      
+      <button type="button" id="btn-close-occurrence-modal" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
+      
+      <span class="badge" style="margin-bottom: 8px; background: #fee6c2; color: var(--warn);"><span class="dot" style="background: var(--warn);"></span> Intervenção Disciplinar</span>
+      <h2 style="margin-top: 0; margin-bottom: 4px;">Registrar Intervenção da Coordenação</h2>
+      <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0; margin-bottom: 24px;">Relate ocorrências severas onde foi exigida a atuação direta ou mediação da coordenação escolar.</p>
+
+      <form id="form-coordination-occurrence" novalidate>
+        
+        <!-- Seleção de Alvo -->
+        <div class="field">
+          <label for="occurrence-target-type">Alvo da Intervenção <span class="req">*</span></label>
+          <select id="occurrence-target-type" class="input-plain" required>
+            <option value="student" selected>Estudante Individual</option>
+            <option value="class">Turma Inteira</option>
+          </select>
+        </div>
+
+        <!-- Seletor Dinâmico de Turma ou Aluno -->
+        <div class="field" id="occurrence-target-student-field">
+          <label for="occurrence-target-student">Selecione o Estudante <span class="req">*</span></label>
+          <select id="occurrence-target-student" class="input-plain" required>
+            <option value="" disabled selected>Selecione o estudante...</option>
+            <option value="1">Lucas Mendes de Oliveira (1º Ano A)</option>
+            <option value="2">Ana Beatriz Santos (1º Ano A)</option>
+            <option value="3">Gabriel Silva Costa (1º Ano A)</option>
+            <option value="5">João Pedro Alves (1º Ano B)</option>
+            <option value="8">Guilherme Cardoso (2º Ano A)</option>
+            <option value="11">Camila Ribeiro Araujo (2º Ano B)</option>
+          </select>
+        </div>
+
+        <div class="field" id="occurrence-target-class-field" style="display: none;">
+          <label for="occurrence-target-class">Selecione a Turma <span class="req">*</span></label>
+          <select id="occurrence-target-class" class="input-plain" required>
+            <option value="" disabled selected>Selecione a turma...</option>
+            <option value="1a">1º Ano A</option>
+            <option value="1b">1º Ano B</option>
+            <option value="2a">2º Ano A</option>
+            <option value="2b">2º Ano B</option>
+          </select>
+        </div>
+
+        <!-- Tipo de Ocorrência -->
+        <div class="field">
+          <label for="occurrence-type">Tipo de Ocorrência <span class="req">*</span></label>
+          <select id="occurrence-type" class="input-plain" required>
+            <option value="" disabled selected>Selecione o tipo de ocorrência...</option>
+            <option value="Conflito entre Alunos">Conflito entre alunos (Mediação de brigas)</option>
+            <option value="Indisciplina Grave">Indisciplina grave em sala de aula</option>
+            <option value="Emergência Médica">Emergência de saúde ou apoio médico</option>
+            <option value="Apoio Familiar">Apoio psicossocial familiar (Reunião com pais)</option>
+            <option value="Saúde Mental">Caso crítico de saúde mental encaminhado</option>
+          </select>
+        </div>
+
+        <!-- Ação Tomada -->
+        <div class="field">
+          <label for="occurrence-action">Ação de Intervenção Tomada <span class="req">*</span></label>
+          <input id="occurrence-action" class="input-plain" type="text" placeholder="Ex.: Conversa com responsáveis / advertência por escrito" required />
+        </div>
+
+        <!-- Descrição -->
+        <div class="field">
+          <label for="occurrence-description">Descrição Detalhada do Evento <span class="req">*</span></label>
+          <textarea id="occurrence-description" class="input-plain" style="height: 100px; padding: 12px; resize: none; font-family: inherit;" placeholder="Relate com detalhes as causas e o andamento da ocorrência para auditoria legal..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;">
+          Registrar Ocorrência
+        </button>
+      </form>
     </div>
   </div>
 </body>
