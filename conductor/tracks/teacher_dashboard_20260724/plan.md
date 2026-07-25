@@ -1,10 +1,10 @@
 # Implementation Plan: Teacher Behavioral Management Dashboard
 
 ## Phase 1: Teacher Dashboard Layout & RBAC Switcher
-- [ ] Task: Update `/dashboard` and `templates/dashboard.html` to support Role-Based Access (RBAC) and implement a visual user-role switcher (Gestor vs Docente) at the top of the dashboard for easy preview.
-- [ ] Task: Create the Teacher Landing View layout within `/dashboard` featuring the Class Sidebar Navigation and the Class Cards Grid.
-- [ ] Task: Implement the Class Detail View showing the roster grid of Student Cards, each complete with emotive icon badges (Ansiedade, Tristeza, Agitação, Apatia, Euforia).
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Teacher Dashboard Layout & RBAC Switcher' (Protocol in workflow.md)
+- [x] Task: Update `/dashboard` and `templates/dashboard.html` to support Role-Based Access (RBAC) and implement a visual user-role switcher (Gestor vs Docente) at the top of the dashboard for easy preview. 7cc0843
+- [x] Task: Create the Teacher Landing View layout within `/dashboard` featuring the Class Sidebar Navigation and the Class Cards Grid. 7cc0843
+- [x] Task: Implement the Class Detail View showing the roster grid of Student Cards, each complete with emotive icon badges (Ansiedade, Tristeza, Agitação, Apatia, Euforia). 7cc0843
+- [~] Task: Conductor - User Manual Verification 'Phase 1: Teacher Dashboard Layout & RBAC Switcher' (Protocol in workflow.md)
 
 ## Phase 2: Behavioral Popup Modal, Voice STT & Interactivity
 - [ ] Task: Build the Student Behavioral Popup Modal containing student details, automatic timestamp, and severity selectors (Low, Medium, High).
