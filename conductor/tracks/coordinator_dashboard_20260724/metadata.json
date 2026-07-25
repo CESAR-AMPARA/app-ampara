@@ -1,0 +1,8 @@
+{
+  "track_id": "coordinator_dashboard_20260724",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-24T14:00:00Z",
+  "updated_at": "2026-07-24T14:00:00Z",
+  "description": "Implemente, usando o agente desginer e dev front, o Dashboard da Coordenação com buscas em tempo real, aprovação e adição de professores, e registro de ocorrências escolares"
+}
