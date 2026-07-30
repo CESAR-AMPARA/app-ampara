@@ -1,0 +1,8 @@
+{
+  "track_id": "track_02_capacitacao",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-30T10:00:00Z",
+  "updated_at": "2026-07-30T10:00:00Z",
+  "description": "Implementação da interface de compartilhamento de materiais de capacitação pelo Coordenador Pedagógico, com suporte a PDFs/links, direcionamento por turma/professor e confirmação de leitura."
+}

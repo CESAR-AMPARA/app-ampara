@@ -1,0 +1,8 @@
+{
+  "track_id": "track_03_historico_filtros",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-30T10:00:00Z",
+  "updated_at": "2026-07-30T10:00:00Z",
+  "description": "Melhorias na linha do tempo do histórico de observações comportamentais dos estudantes, adicionando filtros por período (últimos 7, 30, 90 dias ou personalizado) e exibição do nome do profissional registrador."
+}

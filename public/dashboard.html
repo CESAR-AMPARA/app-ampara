@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Painel de Controle — A.M.P.A.R.A.</title>
   <meta name="description" content="Acompanhe o credenciamento de profissionais no sistema." />
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
   <style>
     /* Estilos customizados adicionais para o painel */
@@ -287,6 +287,16 @@
       </div>
     </div>
 
+    <!-- Navegação Global do Painel (Painel de Trabalho vs Biblioteca de Apoio) -->
+    <div class="tabs-nav" role="tablist" aria-label="Navegação Principal" style="margin-bottom: 24px; border-bottom: 2px solid var(--border);">
+      <button class="tab-btn active" role="tab" aria-selected="true" id="tab-btn-painel" style="font-size: 1.05rem; padding: 12px 24px; font-weight: 700;">
+        📊 Painel de Trabalho
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" id="tab-btn-biblioteca" style="font-size: 1.05rem; padding: 12px 24px; font-weight: 700;">
+        📚 Biblioteca de Apoio
+      </button>
+    </div>
+
     <!-- PAINEL GESTOR (Default) -->
     <div id="panel-gestor">
       
@@ -307,8 +317,8 @@
       <div class="gestor-tab-panel active" id="gestor-tab-credenciamento">
         <!-- Ações de Gerenciamento -->
         <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
-          <a class="btn btn-outline" href="cadastro_turma.html">📂 Cadastrar Turmas</a>
-          <a class="btn btn-outline" href="cadastro_estudante.html">🎓 Cadastrar Estudantes</a>
+          <a class="btn btn-outline" href="/cadastro_turma">📂 Cadastrar Turmas</a>
+          <a class="btn btn-outline" href="/cadastro_estudante">🎓 Cadastrar Estudantes</a>
           <button type="button" class="btn btn-outline" id="btn-open-add-teacher">👤 Adicionar Professor</button>
         </div>
 
@@ -524,13 +534,46 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;" id="students-grid-container">
               <!-- Cards dos Alunos serão injetados dinamicamente via JS com suporte a emoções e logs -->
             </div>
-          </div>
+            </div>
 
-        </div>
+            </div>
 
-      </div>
-    </div>
-  </main>
+            </div>
+            </div>
+
+            <!-- PAINEL BIBLIOTECA (Guias Práticos) (Track 01) -->
+            <div id="panel-biblioteca" style="display: none;">
+            <div class="form-card" style="padding: 32px; border-radius: var(--radius); border-color: var(--border-strong); margin-bottom: 32px; background: var(--card);">
+            <h2 style="margin-top: 0; margin-bottom: 8px; color: var(--navy-dark); font-family: var(--font-serif); font-size: 1.8rem;">📚 Biblioteca de Apoio Psicossocial</h2>
+            <p class="sub" style="margin-top: 0; margin-bottom: 24px; font-size: 1rem; color: var(--muted);">
+            Acesse guias práticos desenvolvidos para orientar e capacitar professores e gestores sobre as abordagens mais seguras e empáticas no acolhimento de estudantes em momentos de vulnerabilidade ou crises emocionais.
+            </p>
+
+            <!-- Barra de Busca e Filtro de Favoritos -->
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 16px; margin-bottom: 32px; align-items: center; flex-wrap: wrap;">
+            <div class="field" style="margin: 0; position: relative; width: 100%;">
+            <input type="text" id="search-library-input" class="input-plain" placeholder="Pesquise por palavras-chave (ex: ansiedade, pânico, isolamento...)" style="padding-left: 44px; height: 50px; font-size: 1rem; width: 100%;" />
+            <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--muted); pointer-events: none;">🔍</span>
+            </div>
+            <button type="button" class="btn btn-outline" id="btn-filter-favorites" style="height: 50px; padding: 0 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; white-space: nowrap;">
+            ⭐ Ver Favoritos
+            </button>
+            </div>
+
+            <!-- Grade de Guias Práticos -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;" id="library-guides-container">
+            <!-- Guias serão inseridos aqui dinamicamente -->
+            </div>
+
+            <!-- Mensagem de lista vazia para busca -->
+            <div id="library-empty-state" style="display: none; text-align: center; padding: 48px 24px; color: var(--muted);">
+            <div style="font-size: 3rem; margin-bottom: 16px;">📂</div>
+            <p style="font-size: 1.1rem; margin: 0;">Nenhum guia encontrado para a sua busca ou filtros.</p>
+            </div>
+            </div>
+            </div>
+
+            </main>
 
   <footer class="site-footer">
     <div class="container wrap">
@@ -539,7 +582,7 @@
     </div>
   </footer>
 
-  <script src="/js/main.js"></script>
+  <script src="/static/main.js"></script>
   <script>
     // JS específico do Dashboard para carregar os dados das APIs do Flask
     (function() {
@@ -1535,11 +1578,311 @@
         });
       }
 
+      // --- DADOS DA BIBLIOTECA DE APOIO (Track 01) ---
+      const guiasBiblioteca = [
+        {
+          id: "guia-01",
+          titulo: "Abordagem Inicial em Crises de Ansiedade Aguda",
+          categoria: "Ansiedade & Pânico",
+          palavrasChave: ["ansiedade", "pânico", "crise", "choro", "hiperventilação", "respirar", "respiração", "pânico"],
+          descricao: "Como oferecer os primeiros socorros psicológicos a um aluno apresentando crise de pânico ou hiperventilação na escola.",
+          comoReconhecer: [
+            "Hiperventilação (respiração rápida e curta).",
+            "Sudorese, tremores e palpitações perceptíveis.",
+            "Choro compulsivo ou paralisia corporal.",
+            "Olhar assustado e sensação iminente de perda de controle ou desmaio."
+          ],
+          passoAPasso: [
+            "<strong>Mantenha a calma física e vocal:</strong> A sua serenidade é a principal âncora de segurança do estudante.",
+            "<strong>Mude de ambiente de forma gentil:</strong> Retire o aluno do centro de atenções ou de salas barulhentas para um local reservado e arejado.",
+            "<strong>Valide as emoções:</strong> Diga frases curtas, claras e confortantes, como: 'Eu estou aqui com você', 'Você está seguro agora' e 'Isso vai passar'.",
+            "<strong>Auxilie a regular a respiração:</strong> Faça o exercício de respirar pausadamente junto com ele (inspirar em 4s, segurar em 4s, expirar em 4s).",
+            "<strong>Técnica de ancoragem cognitiva (54321):</strong> Convide o aluno a nomear 3 objetos ao redor e tocar 2 texturas para focar a mente no presente."
+          ],
+          oQueNaoFazer: [
+            "Nunca diga frases minimizadoras como 'calma, não é nada', 'isso é bobagem' ou 'você quer aparecer'.",
+            "Evite tocar no estudante ou abraçá-lo sem pedir permissão explícita prévia.",
+            "Não force o aluno a andar ou falar caso ele esteja congelado ou com tontura."
+          ]
+        },
+        {
+          id: "guia-02",
+          titulo: "Acolhimento frente ao Isolamento Social e Tristeza",
+          categoria: "Apatia & Depressão",
+          palavrasChave: ["isolamento", "tristeza", "depressão", "choro", "desânimo", "reclusão", "apatia"],
+          descricao: "Estratégias de escuta e acolhimento para estudantes que apresentam sinais de reclusão social severa e desânimo prolongado.",
+          comoReconhecer: [
+            "Afastamento repentino do grupo de amigos e atividades coletivas.",
+            "Apatia ou desinteresse acentuado em disciplinas que antes gostava.",
+            "Queda drástica e repentina no rendimento escolar.",
+            "Postura encolhida e recusa sistemática em se comunicar."
+          ],
+          passoAPasso: [
+            "<strong>Abordagem em ambiente privado:</strong> Chame o aluno para uma conversa tranquila ao final da aula, sem que outros colegas percebam.",
+            "<strong>Escute ativamente, sem interrupções:</strong> Ofereça um espaço seguro para desabafo. Pergunte: 'Como estão as coisas para você?' e ouça com atenção plena.",
+            "<strong>Evite dar conselhos ou soluções prontas:</strong> O mais importante é acolher a dor e fazer com que ele se sinta ouvido e aceito.",
+            "<strong>Fortaleça os canais de ajuda:</strong> Explique que existem profissionais especializados no colégio prontos para apoiá-lo e que você pode ajudá-lo a fazer essa ponte."
+          ],
+          oQueNaoFazer: [
+            "Não faça cobranças duras sobre produtividade enquanto o aluno estiver em sofrimento visível.",
+            "Não force interações sociais forçadas (ex: obrigar a falar em seminários ou liderar apresentações).",
+            "Nunca ignore os sinais sob pretexto de que é 'apenas uma fase'."
+          ]
+        },
+        {
+          id: "guia-03",
+          titulo: "Conduta Recomendada em Sinais de Autolesão",
+          categoria: "Automutilação",
+          palavrasChave: ["automutilação", "autolesão", "cortes", "cicatrizes", "ferimentos", "sofrimento", "braço", "manga"],
+          descricao: "Diretrizes sobre como abordar e encaminhar de forma segura um aluno suspeito de realizar práticas de autolesão/automutilação.",
+          comoReconhecer: [
+            "Uso frequente de casacos de mangas longas ou calças compridas mesmo em dias extremamente quentes.",
+            "Marcas, cortes ou cicatrizes lineares visíveis e repetitivas nos punhos, braços ou coxas.",
+            "Uso frequente e injustificado de curativos adesivos.",
+            "Evitação severa de atividades que exponham o corpo (como aulas de Educação Física)."
+          ],
+          passoAPasso: [
+            "<strong>Reaja com neutralidade empática:</strong> Não demonstre espanto, nojo, desaprovação moral ou pânico ao identificar as marcas.",
+            "<strong>Valide o sofrimento subjacente:</strong> Diga algo como: 'Percebi que você tem passado por momentos difíceis. Quero que saiba que se importa comigo e estou aqui para apoiar.'",
+            "<strong>Priorize o sigilo e segurança:</strong> Comunique de forma urgente, reservada e técnica à Coordenação e Equipe Psicossocial da escola.",
+            "<strong>Promova acompanhamento profissional:</strong> Apoie a escola no contato cuidadoso com os responsáveis, enfatizando que é uma busca por saúde e suporte técnico."
+          ],
+          oQueNaoFazer: [
+            "Não faça promessas de sigilo absoluto caso o estudante corra risco de vida (ele precisa ser cuidado).",
+            "Não confronte o aluno na frente de colegas ou faça interrogatórios acusatórios.",
+            "Não confisque materiais cortantes de forma agressiva (a abordagem deve ser conduzida pela coordenação especializada)."
+          ]
+        }
+      ];
+
+      // --- NAVEGAÇÃO GLOBAL E BIBLIOTECA DE APOIO (Track 01) ---
+      function inicializarNavegacaoGlobalEBiblioteca() {
+        const tabBtnPainel = document.getElementById('tab-btn-painel');
+        const tabBtnBiblioteca = document.getElementById('tab-btn-biblioteca');
+        const panelGestor = document.getElementById('panel-gestor');
+        const panelDocente = document.getElementById('panel-docente');
+        const panelBiblioteca = document.getElementById('panel-biblioteca');
+
+        const searchInput = document.getElementById('search-library-input');
+        const filterFavoritesBtn = document.getElementById('btn-filter-favorites');
+
+        if (!tabBtnPainel || !tabBtnBiblioteca || !panelBiblioteca) return;
+
+        // Alternar para o Painel de Trabalho
+        tabBtnPainel.addEventListener('click', () => {
+          tabBtnPainel.classList.add('active');
+          tabBtnPainel.setAttribute('aria-selected', 'true');
+          tabBtnBiblioteca.classList.remove('active');
+          tabBtnBiblioteca.setAttribute('aria-selected', 'false');
+
+          panelBiblioteca.style.display = "none";
+          if (currentRole === "gestor") {
+            panelGestor.style.display = "block";
+            panelDocente.style.display = "none";
+          } else {
+            panelGestor.style.display = "none";
+            panelDocente.style.display = "block";
+          }
+        });
+
+        // Alternar para a Biblioteca de Apoio
+        tabBtnBiblioteca.addEventListener('click', () => {
+          tabBtnBiblioteca.classList.add('active');
+          tabBtnBiblioteca.setAttribute('aria-selected', 'true');
+          tabBtnPainel.classList.remove('active');
+          tabBtnPainel.setAttribute('aria-selected', 'false');
+
+          panelGestor.style.display = "none";
+          panelDocente.style.display = "none";
+          panelBiblioteca.style.display = "block";
+
+          renderizarBiblioteca();
+        });
+
+        // Registrar controle de mudança de RBAC para manter as abas consistentes
+        const btnRbacGestor = document.getElementById('btn-rbac-gestor');
+        const btnRbacDocente = document.getElementById('btn-rbac-docente');
+        
+        if (btnRbacGestor && btnRbacDocente) {
+          btnRbacGestor.addEventListener('click', () => {
+            if (tabBtnBiblioteca.classList.contains('active')) {
+              panelGestor.style.display = "none";
+              panelDocente.style.display = "none";
+            }
+          });
+          btnRbacDocente.addEventListener('click', () => {
+            if (tabBtnBiblioteca.classList.contains('active')) {
+              panelGestor.style.display = "none";
+              panelDocente.style.display = "none";
+            }
+          });
+        }
+
+        // Filtro por palavra-chave na busca
+        if (searchInput) {
+          searchInput.addEventListener('input', () => {
+            renderizarBiblioteca();
+          });
+        }
+
+        // Alternar filtro de favoritos
+        let mostrarApenasFavoritos = false;
+        if (filterFavoritesBtn) {
+          filterFavoritesBtn.addEventListener('click', () => {
+            mostrarApenasFavoritos = !mostrarApenasFavoritos;
+            if (mostrarApenasFavoritos) {
+              filterFavoritesBtn.classList.add('active');
+              filterFavoritesBtn.style.backgroundColor = "var(--warn)";
+              filterFavoritesBtn.style.color = "#fff";
+              filterFavoritesBtn.innerHTML = "⭐ Ver Todos os Guias";
+            } else {
+              filterFavoritesBtn.classList.remove('active');
+              filterFavoritesBtn.style.backgroundColor = "";
+              filterFavoritesBtn.style.color = "";
+              filterFavoritesBtn.innerHTML = "⭐ Ver Favoritos";
+            }
+            renderizarBiblioteca();
+          });
+        }
+
+        // Renderizar os cards dos guias
+        function renderizarBiblioteca() {
+          const container = document.getElementById('library-guides-container');
+          const emptyState = document.getElementById('library-empty-state');
+          if (!container) return;
+
+          const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+          const favoritosSalvos = JSON.parse(localStorage.getItem('favoritosBiblioteca') || '[]');
+
+          container.innerHTML = '';
+          let totalMostrados = 0;
+
+          guiasBiblioteca.forEach(guia => {
+            const isFavorito = favoritosSalvos.includes(guia.id);
+
+            // Filtragem por Favorito
+            if (mostrarApenasFavoritos && !isFavorito) return;
+
+            // Filtragem por Busca (Query)
+            if (query) {
+              const correspondeTitulo = guia.titulo.toLowerCase().includes(query);
+              const correspondeCategoria = guia.categoria.toLowerCase().includes(query);
+              const correspondeDescricao = guia.descricao.toLowerCase().includes(query);
+              const correspondePalavrasChave = guia.palavrasChave.some(p => p.toLowerCase().includes(query));
+
+              if (!correspondeTitulo && !correspondeCategoria && !correspondeDescricao && !correspondePalavrasChave) {
+                return;
+              }
+            }
+
+            totalMostrados++;
+
+            // Criar Card do Guia
+            const card = document.createElement('div');
+            card.className = 'form-card';
+            card.style.cssText = 'padding: 24px; border-radius: var(--radius-sm); border-color: var(--border); display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0; position: relative; background: var(--card-inset);';
+
+            // Badge de categoria e botão favorito
+            const headerRow = `
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <span class="badge" style="background-color: var(--sage-badge); color: var(--sage-badge-tx); font-weight: 700; font-size: 0.78rem;">${guia.categoria}</span>
+                <button type="button" class="btn-favoritar" data-id="${guia.id}" aria-label="${isFavorito ? 'Remover dos favoritos' : 'Salvar nos favoritos'}" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: ${isFavorito ? 'var(--warn)' : 'var(--border-strong)'}; padding: 0; line-height: 1;">
+                  ${isFavorito ? '★' : '☆'}
+                </button>
+              </div>
+            `;
+
+            // Conteúdo principal
+            const bodyRow = `
+              <div style="flex-grow: 1; margin-bottom: 16px;">
+                <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.2rem; color: var(--navy-dark); font-family: var(--font-serif);">${guia.titulo}</h3>
+                <p style="margin: 0; font-size: 0.9rem; color: var(--ink-soft); line-height: 1.4;">${guia.descricao}</p>
+              </div>
+            `;
+
+            // Seção Expansível para leitura nativa na tela do celular
+            const accordionRow = `
+              <details style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: auto; cursor: pointer;">
+                <summary style="font-size: 0.88rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 6px; outline: none; margin-bottom: 8px;">
+                  📖 Ver Guia de Abordagem Completo
+                </summary>
+                <div style="cursor: default; padding-top: 8px; font-size: 0.88rem; line-height: 1.5; color: var(--ink);">
+                  
+                  <div style="margin-bottom: 12px;">
+                    <strong style="color: var(--warn); display: block; margin-bottom: 4px;">🔍 Como Reconhecer:</strong>
+                    <ul style="margin: 0; padding-left: 18px; color: var(--ink-soft);">
+                      ${guia.comoReconhecer.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                  </div>
+
+                  <div style="margin-bottom: 12px;">
+                    <strong style="color: var(--ok); display: block; margin-bottom: 4px;">✅ O Que Fazer (Passo a Passo):</strong>
+                    <ol style="margin: 0; padding-left: 18px; color: var(--ink-soft);">
+                      ${guia.passoAPasso.map(item => `<li>${item}</li>`).join('')}
+                    </ol>
+                  </div>
+
+                  <div>
+                    <strong style="color: #b06a4f; display: block; margin-bottom: 4px;">❌ O Que NÃO Fazer:</strong>
+                    <ul style="margin: 0; padding-left: 18px; color: var(--ink-soft);">
+                      ${guia.oQueNaoFazer.map(item => `<li>${item}</li>`).join('')}
+                    </ul>
+                  </div>
+
+                </div>
+              </details>
+            `;
+
+            card.innerHTML = headerRow + bodyRow + accordionRow;
+            container.appendChild(card);
+          });
+
+          // Tratar evento de clique no botão de favoritar
+          const favoritarBtns = container.querySelectorAll('.btn-favoritar');
+          favoritarBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const id = btn.getAttribute('data-id');
+              let favoritos = JSON.parse(localStorage.getItem('favoritosBiblioteca') || '[]');
+              
+              if (favoritos.includes(id)) {
+                favoritos = favoritos.filter(fid => fid !== id);
+                btn.innerHTML = '☆';
+                btn.style.color = 'var(--border-strong)';
+                btn.setAttribute('aria-label', 'Salvar nos favoritos');
+                if (typeof toast === 'function') toast("Removido dos favoritos.");
+              } else {
+                favoritos.push(id);
+                btn.innerHTML = '★';
+                btn.style.color = 'var(--warn)';
+                btn.setAttribute('aria-label', 'Remover dos favoritos');
+                if (typeof toast === 'function') toast("Adicionado aos favoritos!");
+              }
+
+              localStorage.setItem('favoritosBiblioteca', JSON.stringify(favoritos));
+              
+              // Se estiver na aba de favoritos, re-renderiza para atualizar a lista
+              if (mostrarApenasFavoritos) {
+                renderizarBiblioteca();
+              }
+            });
+          });
+
+          // Controlar exibição do empty state
+          if (totalMostrados === 0) {
+            emptyState.style.display = 'block';
+          } else {
+            emptyState.style.display = 'none';
+          }
+        }
+      }
+
       // Iniciar
       document.addEventListener('DOMContentLoaded', () => {
+        inicializarNavegacaoGlobalEBiblioteca();
         const usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado"));
         const switcherBox = document.getElementById('rbac-switcher-box');
-        const btnSair = document.querySelector('.site-header .header-actions a');
+        const btnSair = document.querySelector('.site-header .header-actions a[href="/"]');
 
         // Limpar cache ao fazer logout (Sair)
         if (btnSair) {

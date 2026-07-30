@@ -1,0 +1,8 @@
+{
+  "track_id": "track_01_biblioteca",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-30T10:00:00Z",
+  "updated_at": "2026-07-30T10:00:00Z",
+  "description": "Implementação da aba Biblioteca pesquisável por palavras-chave com guias de crise emocional renderizados nativamente e salvamento nos favoritos."
+}
