@@ -1,0 +1,8 @@
+{
+  "track_id": "track_04_registro_rapido",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-30T10:00:00Z",
+  "updated_at": "2026-07-30T10:00:00Z",
+  "description": "Refatoração do modal de Registro Comportamental para incluir campos obrigatórios Aluno e Tipo de Comportamento, tornar a descrição opcional e limitada a 500 caracteres, emitir mensagem de sucesso e auto-salvar data/hora."
+}
