@@ -1353,6 +1353,7 @@
         const voiceBtn = document.getElementById('btn-voice-input');
         const descInput = document.getElementById('behavior-description');
         const voiceStatus = document.getElementById('voice-status');
+        const charCounter = document.getElementById('char-counter');
 
         if (!modal || !btnCloseModal || !formBehavior || !voiceBtn || !descInput) return;
 
@@ -1367,6 +1368,21 @@
             activeStudentForModal = null;
           }
         });
+
+        // Contador de caracteres dinâmico (Track 04)
+        if (charCounter) {
+          descInput.addEventListener('input', () => {
+            const count = descInput.value.length;
+            charCounter.textContent = `${count} / 500 caracteres`;
+            if (count >= 500) {
+              charCounter.style.color = "var(--warn)";
+              charCounter.style.fontWeight = "700";
+            } else {
+              charCounter.style.color = "var(--muted)";
+              charCounter.style.fontWeight = "normal";
+            }
+          });
+        }
 
         // Simulador de Microfone / Voz para Texto (STT)
         let voiceInterval = null;
@@ -1400,11 +1416,14 @@
           let index = 0;
           
           voiceInterval = setInterval(() => {
-            if (index < randomPhrase.length) {
+            if (currentText.length < 500 && index < randomPhrase.length) {
               currentText += randomPhrase.charAt(index);
               descInput.value = currentText;
               index++;
               descInput.scrollTop = descInput.scrollHeight;
+              if (charCounter) {
+                charCounter.textContent = `${currentText.length} / 500 caracteres`;
+              }
             } else {
               stopVoiceSimulation();
             }
@@ -1426,41 +1445,56 @@
           if (typeof toast === 'function') toast("Fala transcrita para texto com sucesso!");
         }
 
-        // Envio do Relato Comportamental
+        // Envio do Relato Comportamental (Track 04)
         formBehavior.addEventListener('submit', (e) => {
           e.preventDefault();
           
           if (!activeStudentForModal) return;
+
+          const typeSelect = document.getElementById('behavior-type');
+          const behaviorType = typeSelect ? typeSelect.value : "";
+
+          // Validação Obrigatória do Tipo de Comportamento
+          if (!behaviorType) {
+            if (typeof toast === 'function') {
+              toast("Por favor, selecione o tipo de comportamento.");
+            } else {
+              alert("Por favor, selecione o tipo de comportamento.");
+            }
+            if (typeSelect) typeSelect.focus();
+            return;
+          }
           
           const text = descInput.value.trim();
           const severity = document.querySelector('input[name="severity"]:checked').value;
-          
-          if (!text) {
-            if (typeof toast === 'function') {
-              toast("Por favor, preencha o relato de comportamento.");
-            } else {
-              alert("Por favor, preencha o relato de comportamento.");
-            }
-            return;
-          }
           
           const now = new Date();
           const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
           
           const { student, classId } = activeStudentForModal;
+
+          // Autor automático
+          const user = JSON.parse(sessionStorage.getItem("usuarioLogado")) || { nome: "Ana Silva", perfil: "docente" };
+          const authorName = `Prof. ${user.nome || "Ana Silva"} (${user.perfil === 'docente' ? 'Docente' : 'Coordenação'})`;
+
+          const behaviorLabel = typeSelect ? typeSelect.options[typeSelect.selectedIndex].text : "Comportamento";
+          
+          // Se a descrição for vazia (opcional), preenche com texto padrão sobre o tipo
+          const finalLogText = text ? text : `Observação de comportamento registrada: ${behaviorLabel}.`;
           
           const newLog = {
             date: formattedDate,
             severity,
-            text
+            text: finalLogText,
+            author: authorName
           };
           
           student.logs.unshift(newLog);
           
           if (typeof toast === 'function') {
-            toast(`Anotação adicionada para ${student.nome.split(' ')[0]}!`);
+            toast(`Registro comportamental salvo com sucesso para ${student.nome.split(' ')[0]}!`);
           } else {
-            alert(`Anotação adicionada para ${student.nome.split(' ')[0]}!`);
+            alert(`Registro comportamental salvo com sucesso para ${student.nome.split(' ')[0]}!`);
           }
           
           modal.style.display = "none";
@@ -1474,6 +1508,9 @@
       function vincularAberturaModal() {
         const modal = document.getElementById('student-modal');
         const descInput = document.getElementById('behavior-description');
+        const studentNameInput = document.getElementById('behavior-student-name');
+        const typeSelect = document.getElementById('behavior-type');
+        const charCounter = document.getElementById('char-counter');
 
         document.querySelectorAll('.btn-open-modal').forEach(btn => {
           btn.addEventListener('click', () => {
@@ -1486,13 +1523,23 @@
               
               document.getElementById('modal-student-name').textContent = student.nome;
               document.getElementById('modal-student-matricula').textContent = `Matrícula: ${student.matricula}`;
+              
+              // Resetar e preencher campos do formulário (Track 04)
+              if (studentNameInput) studentNameInput.value = student.nome;
+              if (typeSelect) typeSelect.value = '';
               descInput.value = '';
+              if (charCounter) {
+                charCounter.textContent = '0 / 500 caracteres';
+                charCounter.style.color = "var(--muted)";
+                charCounter.style.fontWeight = "normal";
+              }
+
               document.querySelector('input[name="severity"][value="low"]').checked = true;
               
               renderizarLinhaDoTempo(student.logs);
               
               modal.style.display = "flex";
-              descInput.focus();
+              if (typeSelect) typeSelect.focus();
             }
           });
         });
@@ -2455,6 +2502,26 @@
 
       <form id="form-behavior-log" novalidate>
         
+        <!-- Aluno (Obrigatório) (Track 04) -->
+        <div class="field">
+          <label for="behavior-student-name">Aluno <span class="req">*</span></label>
+          <input type="text" id="behavior-student-name" class="input-plain" readonly style="background: var(--input-bg); cursor: not-allowed; font-weight: 700; color: var(--navy-dark);" value="Lucas Mendes" />
+        </div>
+
+        <!-- Tipo de Comportamento (Obrigatório) (Track 04) -->
+        <div class="field">
+          <label for="behavior-type">Tipo de Comportamento <span class="req">*</span></label>
+          <select id="behavior-type" class="input-plain" required style="cursor: pointer;">
+            <option value="" disabled selected>Selecione o tipo de comportamento...</option>
+            <option value="ansiedade">😰 Ansiedade</option>
+            <option value="tristeza">😢 Tristeza</option>
+            <option value="agitacao">⚡ Agitação</option>
+            <option value="apatia">😐 Apatia</option>
+            <option value="euforia">🌟 Euforia</option>
+            <option value="outro">❓ Outro</option>
+          </select>
+        </div>
+
         <!-- Gravidade -->
         <div class="field">
           <label style="margin-bottom: 8px;">Nível de Gravidade <span class="req">*</span></label>
@@ -2474,21 +2541,22 @@
           </div>
         </div>
 
-        <!-- Relato -->
+        <!-- Relato (Opcional limitado a 500 caracteres) (Track 04) -->
         <div class="field">
-          <div class="field-head">
-            <label for="behavior-description">Descrição do Comportamento <span class="req">*</span></label>
-            <span style="font-size: 0.78rem; color: var(--muted);" id="voice-status">Digitando ou gravando por voz...</span>
+          <div class="field-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="behavior-description" style="margin: 0;">Descrição do Comportamento <span style="font-weight: normal; color: var(--muted); font-size: 0.82rem;">(Opcional)</span></label>
+            <span style="font-size: 0.78rem; color: var(--muted);" id="char-counter">0 / 500 caracteres</span>
           </div>
           
           <div style="position: relative;">
-            <textarea id="behavior-description" class="input-plain" style="height: 120px; padding: 12px; padding-right: 48px; resize: none; font-family: inherit;" placeholder="Descreva as observações sobre o comportamento do estudante..." required></textarea>
+            <textarea id="behavior-description" class="input-plain" maxlength="500" style="height: 100px; padding: 12px; padding-right: 48px; resize: none; font-family: inherit;" placeholder="Descreva opcionalmente as observações adicionais (limite de 500 caracteres)..."></textarea>
             
             <!-- Botão de Microfone (STT Simulator) -->
             <button type="button" id="btn-voice-input" aria-label="Inserir por voz" style="position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border-radius: 50%; background: var(--sage-badge); border: 1px solid var(--sage); color: var(--sage-badge-tx); display: grid; place-items: center; cursor: pointer; transition: background-color 0.15s, transform 0.15s; font-size: 1rem;">
               🎤
             </button>
           </div>
+          <span style="font-size: 0.75rem; color: var(--muted); margin-top: 4px; display: block;" id="voice-status">Digitando ou gravando por voz...</span>
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700;">
