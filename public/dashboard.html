@@ -232,6 +232,34 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Estilos de Abas e Abas Globais (Padrão de Design do Projeto) */
+    .tabs-nav {
+      display: flex;
+      gap: 16px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 12px 20px;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-bottom-color 0.15s;
+    }
+    .tab-btn:hover {
+      color: var(--navy);
+    }
+    .tab-btn.active {
+      color: var(--navy-dark);
+      border-bottom-color: var(--navy-dark);
+    }
   </style>
 </head>
 <body>
@@ -311,7 +339,7 @@
         <button class="tab-btn" role="tab" aria-selected="false" aria-controls="gestor-tab-ocorrencias" id="btn-gestor-tab-ocorrencias" style="font-size: 0.95rem; padding: 10px 16px;">
           ⚠️ Ocorrências da Coordenação
         </button>
-        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="gestor-tab-capacitacao" id="btn-gestor-tab-capacitacao" style="font-size: 0.95rem; padding: 10px 16px; font-weight: 700;">
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="gestor-tab-capacitacao" id="btn-gestor-tab-capacitacao" style="font-size: 0.95rem; padding: 10px 16px;">
           🎓 Capacitação Docente
         </button>
       </div>
