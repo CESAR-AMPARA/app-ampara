@@ -413,6 +413,27 @@
           </div>
           <div style="border-top: 1px solid var(--border); padding-top: 20px;">
             <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 1.15rem; color: var(--navy-dark); font-family: var(--font-serif);">Linha do Tempo Comportamental</h3>
+
+            <!-- Filtro de Período da Linha do Tempo (Track 03) -->
+            <div id="timeline-period-filter" style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: var(--card-inset); padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+              <span style="font-size: 0.88rem; font-weight: 700; color: var(--navy-dark);">📅 Filtrar histórico por período:</span>
+              <select id="filter-timeline-days" class="input-plain" style="padding: 6px 12px; height: 38px; width: auto; font-size: 0.88rem; margin: 0; cursor: pointer;">
+                <option value="all" selected>Todo o Histórico</option>
+                <option value="7">Últimos 7 dias</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+                <option value="custom">Período Personalizado</option>
+              </select>
+              
+              <!-- Inputs de data personalizada (escondidos por padrão) -->
+              <div id="custom-date-inputs" style="display: none; align-items: center; gap: 8px;">
+                <label style="font-size: 0.85rem; color: var(--muted); margin: 0;">De:</label>
+                <input type="date" id="filter-date-start" class="input-plain" style="padding: 4px 10px; height: 38px; font-size: 0.88rem; width: auto;" />
+                <label style="font-size: 0.85rem; color: var(--muted); margin: 0;">Até:</label>
+                <input type="date" id="filter-date-end" class="input-plain" style="padding: 4px 10px; height: 38px; font-size: 0.88rem; width: auto;" />
+              </div>
+            </div>
+
             <div id="search-timeline-logs-container" style="display: flex; flex-direction: column; gap: 16px;">
               <!-- Logs do prontuário serão renderizados -->
             </div>
@@ -1893,49 +1914,143 @@
         }
       }
 
+      // --- FILTRAGEM DE HISTÓRICO COM AUTORES (Track 03) ---
+      let activeStudentForTimeline = null;
+
+      function inicializarFiltrosLinhaTempo() {
+        const selectFilter = document.getElementById('filter-timeline-days');
+        const customDateBox = document.getElementById('custom-date-inputs');
+        const dateStartInput = document.getElementById('filter-date-start');
+        const dateEndInput = document.getElementById('filter-date-end');
+
+        if (!selectFilter || !customDateBox || !dateStartInput || !dateEndInput) return;
+
+        selectFilter.addEventListener('change', () => {
+          if (selectFilter.value === "custom") {
+            customDateBox.style.display = "flex";
+          } else {
+            customDateBox.style.display = "none";
+          }
+          renderizarLinhaDeTempoFiltrada();
+        });
+
+        dateStartInput.addEventListener('input', renderizarLinhaDeTempoFiltrada);
+        dateEndInput.addEventListener('input', renderizarLinhaDeTempoFiltrada);
+      }
+
+      function renderizarLinhaDeTempoFiltrada() {
+        if (!activeStudentForTimeline) return;
+
+        const logsContainer = document.getElementById('search-timeline-logs-container');
+        if (!logsContainer) return;
+
+        const selectFilter = document.getElementById('filter-timeline-days');
+        const dateStartInput = document.getElementById('filter-date-start');
+        const dateEndInput = document.getElementById('filter-date-end');
+
+        const filterType = selectFilter ? selectFilter.value : "all";
+
+        logsContainer.innerHTML = '';
+
+        // Filtragem de Logs por Data
+        let filteredLogs = activeStudentForTimeline.logs || [];
+
+        if (filterType !== "all" && filteredLogs.length > 0) {
+          const now = new Date();
+          let startLimit = null;
+          let endLimit = null;
+
+          if (filterType === "7") {
+            startLimit = new Date();
+            startLimit.setDate(now.getDate() - 7);
+          } else if (filterType === "30") {
+            startLimit = new Date();
+            startLimit.setDate(now.getDate() - 30);
+          } else if (filterType === "90") {
+            startLimit = new Date();
+            startLimit.setDate(now.getDate() - 90);
+          } else if (filterType === "custom") {
+            const sVal = dateStartInput ? dateStartInput.value : "";
+            const eVal = dateEndInput ? dateEndInput.value : "";
+            if (sVal) {
+              startLimit = new Date(sVal + "T00:00:00");
+            }
+            if (eVal) {
+              endLimit = new Date(eVal + "T23:59:59");
+            }
+          }
+
+          filteredLogs = filteredLogs.filter(log => {
+            // Converter log.date (formato DD/MM/YYYY HH:MM) para Date
+            const parts = log.date.split(' ');
+            const dateParts = parts[0].split('/');
+            const logDateObj = new Date(parseInt(dateParts[2]), parseInt(dateParts[1]) - 1, parseInt(dateParts[0]));
+
+            if (startLimit && logDateObj < startLimit) return false;
+            if (endLimit && logDateObj > endLimit) return false;
+            return true;
+          });
+        }
+
+        if (filteredLogs.length === 0) {
+          logsContainer.innerHTML = `
+            <div style="text-align: center; color: var(--muted); padding: 24px 0; font-size: 0.9rem;">
+              Nenhuma anotação comportamental encontrada para o período selecionado.
+            </div>
+          `;
+          return;
+        }
+
+        filteredLogs.forEach(log => {
+          const item = document.createElement('div');
+          item.style.cssText = "border-left: 3px solid var(--border-strong); padding-left: 14px; margin-bottom: 4px; padding-bottom: 4px;";
+          
+          let label = "Baixa";
+          let color = "var(--ok)";
+          if (log.severity === "medium") {
+            label = "Média";
+            color = "var(--warn)";
+          } else if (log.severity === "high") {
+            label = "Alta";
+            color = "#b06a4f";
+          }
+
+          // Exibe o autor da anotação (padrão se vazio)
+          const autorLog = log.author || "Profª. Ana Silva (Docente)";
+
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 4px;">
+              <span>📅 ${log.date} · <strong style="color: var(--navy-dark);">${autorLog}</strong></span>
+              <strong style="color: ${color};">Gravidade: ${label}</strong>
+            </div>
+            <p style="margin: 0; font-size: 0.9rem; color: var(--ink-soft);">${escapeHtml(log.text)}</p>
+          `;
+          logsContainer.appendChild(item);
+        });
+      }
+
       function abrirLinhaDeTempoBusca(student) {
         const box = document.getElementById('search-student-timeline-box');
         const nameEl = document.getElementById('search-timeline-student-name');
         const idEl = document.getElementById('search-timeline-student-id');
-        const logsContainer = document.getElementById('search-timeline-logs-container');
 
-        if (!box || !nameEl || !idEl || !logsContainer) return;
+        if (!box || !nameEl || !idEl) return;
 
         nameEl.textContent = student.nome;
         idEl.textContent = `Matrícula: ${student.matricula}`;
         
-        logsContainer.innerHTML = '';
-        if (!student.logs || student.logs.length === 0) {
-          logsContainer.innerHTML = `
-            <div style="text-align: center; color: var(--muted); padding: 24px 0; font-size: 0.9rem;">
-              Nenhuma anotação comportamental registrada para este estudante.
-            </div>
-          `;
-        } else {
-          student.logs.forEach(log => {
-            const item = document.createElement('div');
-            item.style.cssText = "border-left: 3px solid var(--border-strong); padding-left: 14px; margin-bottom: 4px;";
-            
-            let label = "Baixa";
-            let color = "var(--ok)";
-            if (log.severity === "medium") {
-              label = "Média";
-              color = "var(--warn)";
-            } else if (log.severity === "high") {
-              label = "Alta";
-              color = "#b06a4f";
-            }
+        // Resetar os inputs de filtro de data ao abrir a timeline de um novo aluno
+        const selectFilter = document.getElementById('filter-timeline-days');
+        const customDateBox = document.getElementById('custom-date-inputs');
+        const dateStartInput = document.getElementById('filter-date-start');
+        const dateEndInput = document.getElementById('filter-date-end');
+        if (selectFilter) selectFilter.value = "all";
+        if (customDateBox) customDateBox.style.display = "none";
+        if (dateStartInput) dateStartInput.value = "";
+        if (dateEndInput) dateEndInput.value = "";
 
-            item.innerHTML = `
-              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 4px;">
-                <span>📅 ${log.date}</span>
-                <strong style="color: ${color};">Gravidade: ${label}</strong>
-              </div>
-              <p style="margin: 0; font-size: 0.9rem; color: var(--ink-soft);">${escapeHtml(log.text)}</p>
-            `;
-            logsContainer.appendChild(item);
-          });
-        }
+        activeStudentForTimeline = student;
+        renderizarLinhaDeTempoFiltrada();
 
         box.style.display = "block";
         box.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2281,6 +2396,7 @@
       document.addEventListener('DOMContentLoaded', () => {
         inicializarNavegacaoGlobalEBiblioteca();
         inicializarCompartilhamentoDeMateriais();
+        inicializarFiltrosLinhaTempo();
         const usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado"));
         const switcherBox = document.getElementById('rbac-switcher-box');
         const btnSair = document.querySelector('.site-header .header-actions a[href="/"]');
