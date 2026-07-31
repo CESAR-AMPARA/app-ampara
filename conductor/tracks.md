@@ -6,5 +6,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [x] [Track 01: Biblioteca de Guias Práticos](./tracks/track_01_biblioteca/index.md) - Biblioteca de guias para situações de crise emocional (User Story 1). fdd110a
 - [x] [Track 02: Compartilhamento de Materiais](./tracks/track_02_capacitacao/index.md) - Compartilhamento de materiais de capacitação pelo Coordenador (User Story 2). bc08616
-- [ ] [Track 03: Histórico e Filtros de Observações](./tracks/track_03_historico_filtros/index.md) - Histórico unificado com filtros por período e profissional (User Story 3).
+- [x] [Track 03: Histórico e Filtros de Observações](./tracks/track_03_historico_filtros/index.md) - Histórico unificado com filtros por período e profissional (User Story 3). 0a644aa
 - [ ] [Track 04: Registro Rápido de Observações](./tracks/track_04_registro_rapido/index.md) - Refatoração do registro comportamental com campos obrigatórios e limite de caracteres (User Story 4).
