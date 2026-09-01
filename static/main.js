@@ -423,7 +423,7 @@ function initWizard(form) {
 
             e.preventDefault();
 
-            if (current !== 3 || (submitBtn && submitBtn.disabled)) {
+            if (current !== 4 || (submitBtn && submitBtn.disabled)) {
                 return;
             }
 
@@ -444,6 +444,12 @@ function initWizard(form) {
 
                     matricula:
                         document.getElementById("matricula").value,
+
+                    cargo:
+                        document.getElementById("cargo").value,
+
+                    registro:
+                        document.getElementById("registro").value,
 
                     estado:
                         document.getElementById("estado").value,
@@ -476,7 +482,7 @@ function initWizard(form) {
 
                 if (resultado.sucesso) {
 
-                    goTo(4);
+                    goTo(5);
 
                 } else {
 
@@ -503,6 +509,16 @@ function initWizard(form) {
 
         if (step === 1) {
 
+            return requireFields([
+                "estado",
+                "municipio",
+                "escola"
+            ]);
+
+        }
+
+        if (step === 2) {
+
             if (!chosenRole) {
 
                 toast(
@@ -520,13 +536,11 @@ function initWizard(form) {
 
         }
 
-        if (step === 2) {
+        if (step === 3) {
 
             return requireFields([
                 "matricula",
-                "estado",
-                "municipio",
-                "escola"
+                "cargo"
             ]);
 
         }
