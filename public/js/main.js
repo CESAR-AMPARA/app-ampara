@@ -206,16 +206,19 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (submitBtn.disabled) return;
-      goTo(4); // tela de sucesso
+      goTo(5); // tela de sucesso
     });
 
     function validateStep(step) {
       if (step === 1) {
+        return requireFields(['estado', 'municipio', 'escola']);
+      }
+      if (step === 2) {
         if (!chosenRole) { toast('Selecione um perfil profissional para continuar.'); return false; }
         return requireFields(['nome', 'tel', 'email']);
       }
-      if (step === 2) {
-        return requireFields(['matricula', 'estado', 'municipio', 'escola']);
+      if (step === 3) {
+        return requireFields(['matricula', 'cargo']);
       }
       return true;
     }
@@ -232,7 +235,7 @@
     }
 
     function goTo(step) {
-      current = Math.max(1, Math.min(4, step));
+      current = Math.max(1, Math.min(5, step));
       // Painéis
       form.querySelectorAll('.panel').forEach(function (p) {
         p.classList.toggle('active', +p.getAttribute('data-panel') === current);

@@ -350,7 +350,7 @@ select.input-plain, input.input-plain, .input-plain {
 .onboarding h1 { font-size: clamp(2rem, 4vw, 2.7rem); margin: 0 0 8px; }
 .onboarding .sub { color: var(--muted); margin: 0 0 28px; }
 
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 26px; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 26px; }
 .step { }
 .step .bar { height: 4px; border-radius: 4px; background: var(--border); margin-bottom: 12px; transition: background .3s; }
 .step .row { display: flex; align-items: center; gap: 10px; color: var(--muted); }
@@ -381,7 +381,7 @@ select.input-plain, input.input-plain, .input-plain {
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* Cartões de RBAC */
-.rbac-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 26px; }
+.rbac-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 26px; }
 .rbac-card {
   text-align: left;
   background: var(--input-bg);
