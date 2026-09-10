@@ -1,0 +1,3 @@
+# Avoid hardcoded secrets and environment variables for sensitive credentials
+
+To satisfy strict data security policies and prevent accidental exposure in source control, no secrets, API keys, or database passwords are hardcoded in the codebase, and no sensitive credentials are read from raw environment variables. Instead, the application resolves required credentials via local, restricted configuration files (such as `credentials.json`) or dedicated secret management adapters. This guarantees that credential handling remains highly secure and auditable in both development and production environments.

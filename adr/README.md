@@ -93,4 +93,8 @@ No line breaks inside a paragraph: each paragraph, and each list item, is a sing
 
 ## Decision Index
 
-- 
+- [0001-nothing-resolves-at-import-time.md](./0001-nothing-resolves-at-import-time.md): Nothing resolves at import time
+- [0002-infrastructure-adapters-encapsulation.md](./0002-infrastructure-adapters-encapsulation.md): Encapsulate service-specific logic in infrastructure adapters
+- [0003-secrets-handling-credentials.md](./0003-secrets-handling-credentials.md): Avoid hardcoded secrets and environment variables for sensitive credentials
+- [0004-monorepo-structure-and-dev-script.md](./0004-monorepo-structure-and-dev-script.md): Organize repository as a monorepo managed by a single dev.sh script
+ 
