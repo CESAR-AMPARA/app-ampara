@@ -1,0 +1,3 @@
+# Organize repository as a monorepo managed by a single dev.sh script
+
+To streamline development, test execution, and deployment for a platform that has distinct frontend and backend logic, the project is structured as a modular monorepo containing `frontend/`, `backend/`, and `database/` boundaries. All common workflows, including dependency installation, linting with pylint, building, and running tests, are executed through a unified `dev.sh` shell script. This provides developers with a consistent interface and strictly enforces project-wide quality gates across all domains without requiring disparate commands.
