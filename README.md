@@ -1,6 +1,10 @@
-# A.M.P.A.R.A. — Apoio, Monitoramento Psicológico e Acolhimento Responsável ao Aluno
+# A.M.P.A.R.A. — Apoio, Monitoramento Psicológico e Acolhimento Responsável ao Aluno / Support, Psychological Monitoring, and Responsible Student Care
 
+### PT-BR
 O **A.M.P.A.R.A.** é uma plataforma web projetada para apoiar, monitorar e garantir o acolhimento psicossocial de estudantes do Ensino Médio. A aplicação conecta docentes, equipes multidisciplinares (psicólogos, assistentes sociais e orientadores) e a gestão escolar em torno do bem-estar dos alunos, operando sob conformidade estrita com a LGPD (Lei Geral de Proteção de Dados) para o tratamento de dados sensíveis de saúde e comportamento escolar.
+
+### English
+**A.M.P.A.R.A.** is a web platform designed to support, monitor, and ensure the psychosocial care of high school students. The application connects teachers, multidisciplinary teams (psychologists, social workers, and counselors), and school administrators around student well-being. It operates under strict compliance with the LGPD (General Data Protection Law) for the processing of sensitive health and school behavior data.
 
 ---
 
@@ -47,5 +51,39 @@ We follow a strict Test-Driven Development (TDD) lifecycle:
 ### Language Rules
 - **English:** Module names, docstrings, commit messages, comments, tests, and documentation (like ADRs and Specs).
 - **Portuguese:** Any text that leaves the codebase for a human (UI copy, error messages) or for an AI model (system prompts, tool descriptions). Model-facing text is always defined as explicit constants.
+
+---
+
+## Development Commands
+
+All common developer workflows are centralized under the unified `dev.sh` orchestrator script.
+
+### Commands
+
+1. **Install Dependencies**
+   Creates a Python virtual environment (`.venv`) and installs all production and development dependencies (including `pylint` and `coverage`):
+   ```bash
+   ./dev.sh install
+   ```
+
+2. **Run Tests & Code Coverage**
+   Executes the full unit test suite with code coverage reporting. Enforces the strict **>90%** coverage gate:
+   ```bash
+   ./dev.sh test
+   ```
+
+3. **Run Code Quality Checks (Linter)**
+   Performs static analysis with `pylint` across all code. Enforces the strict **10/10** quality gate:
+   ```bash
+   ./dev.sh lint
+   ```
+
+4. **Start Local Development Server**
+   Launches the Flask backend development server (with hot-reload and debug mode), dynamically rendering the templates and assets from `frontend/`:
+   ```bash
+   ./dev.sh serve
+   ```
+
+---
 
 For full architectural context and decisions, always refer to the [`adr/`](adr/README.md) directory. For pending implementations and feature specifications, refer to the [`todo/`](todo/README.md) directory.
