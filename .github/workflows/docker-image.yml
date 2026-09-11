@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Continuous Integration
 
 on:
   push:
@@ -7,12 +7,36 @@ on:
     branches: [ "main" ]
 
 jobs:
-
-  build:
-
+  test-and-lint:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Run Install
+      run: |
+        chmod +x dev.sh
+        ./dev.sh install
+
+    - name: Run Linter (Pylint Quality Gate)
+      run: ./dev.sh lint
+
+    - name: Run Tests (Coverage Gate)
+      run: ./dev.sh test
+
+  build-image:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
