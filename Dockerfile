@@ -20,9 +20,10 @@ COPY . .
 EXPOSE 80
 
 # Define variáveis de ambiente padrão
-ENV FLASK_APP=app.py
+ENV FLASK_APP=backend/src/app.py
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/backend
 
 # Comando para iniciar o servidor de produção Gunicorn na porta 80
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:80", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:80", "--timeout", "120", "--chdir", "backend", "src.app:app"]
