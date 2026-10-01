@@ -59,43 +59,58 @@
         <h2>Entrar no sistema</h2>
         <p class="sub">Use suas credenciais institucionais.</p>
 
-        <form id="loginForm" novalidate>
-          <div class="field">
-            <label for="email">E-mail institucional, Matrícula ou CPF</label>
-            <div class="input-shell">
-              <span class="ico" aria-hidden="true">👤</span>
-              <input id="email" name="email" type="text" placeholder="ex.: professor@edu.gov.br" autocomplete="username" required />
+        <div id="credentialsContainer">
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="email">E-mail institucional, Matrícula ou CPF</label>
+              <div class="input-shell">
+                <span class="ico" aria-hidden="true">👤</span>
+                <input id="email" name="email" type="text" placeholder="ex.: professor@edu.gov.br" autocomplete="username" required />
+              </div>
             </div>
-          </div>
 
-          <div class="field">
-            <div class="field-head">
-              <label for="senha">Senha</label>
-              <a class="link-small" href="#">Esqueci minha senha</a>
+            <div class="field">
+              <div class="field-head">
+                <label for="senha">Senha</label>
+                <a class="link-small" href="#">Esqueci minha senha</a>
+              </div>
+              <div class="input-shell">
+                <span class="ico" aria-hidden="true">🔑</span>
+                <input id="senha" name="senha" type="password" placeholder="••••••••" autocomplete="current-password" required />
+                <button type="button" class="toggle" data-toggle-password="senha">Mostrar</button>
+              </div>
             </div>
-            <div class="input-shell">
-              <span class="ico" aria-hidden="true">🔑</span>
-              <input id="senha" name="senha" type="password" placeholder="••••••••" autocomplete="current-password" required />
-              <button type="button" class="toggle" data-toggle-password="senha">Mostrar</button>
+
+            <div class="check-row">
+              <input id="lembrar" type="checkbox" />
+              <div class="txt">
+                <label for="lembrar">Lembrar meu acesso neste dispositivo</label>
+                <small>Recomendado apenas para computadores particulares e seguros.</small>
+              </div>
             </div>
-          </div>
 
-          <div class="check-row">
-            <input id="lembrar" type="checkbox" />
-            <div class="txt">
-              <label for="lembrar">Lembrar meu acesso neste dispositivo</label>
-              <small>Recomendado apenas para computadores particulares e seguros.</small>
+            <button type="submit" class="btn btn-primary btn-block btn-lg">Entrar no sistema →</button>
+          </form>
+
+          <div class="divider">ou acesse via rede educacional</div>
+
+          <button type="button" class="gov-btn">
+            <span class="gov-tag">gov</span> Entrar com Gov.br / Portal da Secretaria de Educação
+          </button>
+        </div>
+
+        <div id="mfaContainer" class="hidden mfa-box">
+          <h3 style="margin-top: 0; text-align: center;">Autenticação em Duas Etapas</h3>
+          <p style="text-align: center; color: var(--muted); font-size: 0.95rem; margin-bottom: 24px;">Enviamos um código de 6 dígitos para o seu celular/e-mail cadastrado.</p>
+          <form id="mfaForm" novalidate>
+            <div class="field">
+              <label for="mfa_code" class="sr-only">Código de Verificação</label>
+              <input id="mfa_code" name="mfa_code" class="input-plain mfa-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" required autocomplete="one-time-code" />
             </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-block btn-lg">Entrar no sistema →</button>
-        </form>
-
-        <div class="divider">ou acesse via rede educacional</div>
-
-        <button type="button" class="gov-btn">
-          <span class="gov-tag">gov</span> Entrar com Gov.br / Portal da Secretaria de Educação
-        </button>
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 16px;">Verificar Código</button>
+          </form>
+          <p style="text-align: center; margin-top: 16px; font-size: 0.85rem;"><a href="#" id="resendMfaLink" class="link-small">Reenviar código</a></p>
+        </div>
 
         <div class="form-foot">
           Primeiro acesso institucional? <a class="link-small" href="/cadastro">Cadastre-se aqui</a>
