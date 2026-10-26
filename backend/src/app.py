@@ -72,6 +72,30 @@ def dashboard():
     )
 
 
+@app.route("/conta_pendente")
+def conta_pendente():
+    """Render the pending account review page."""
+    return render_template(
+        "conta_pendente.html"
+    )
+
+
+@app.route("/dashboard_gestao")
+def dashboard_gestao():
+    """Render the school manager dashboard."""
+    return render_template(
+        "dashboard_gestao.html"
+    )
+
+
+@app.route("/dashboard_saude")
+def dashboard_saude():
+    """Render the multidisciplinary team dashboard."""
+    return render_template(
+        "dashboard_saude.html"
+    )
+
+
 @app.route("/cadastro_turma")
 def cadastro_turma():
     """Render the class registration page."""
