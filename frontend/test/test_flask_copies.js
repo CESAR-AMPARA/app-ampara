@@ -17,7 +17,7 @@ function toFlaskPaths(html) {
     .replace(/\/js\/main\.js/g, '/static/main.js');
 }
 
-const pages = ['cadastro', 'login', 'conta_pendente', 'dashboard_gestao', 'dashboard_saude', 'recuperar_senha', 'redefinir_senha', 'cadastro_turma', 'cadastro_estudante'];
+const pages = ['cadastro', 'login', 'conta_pendente', 'recuperar_senha', 'redefinir_senha', 'cadastro_turma', 'cadastro_estudante', 'dashboard'];
 
 for (const page of pages) {
   test(`src/templates/${page}.html mirrors public/${page}.html`, () => {
