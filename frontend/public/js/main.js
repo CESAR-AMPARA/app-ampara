@@ -181,6 +181,82 @@
     });
   }
 
+  /* -------------------- Esqueci minha senha -------------------- */
+  var recoverForm = document.getElementById('recoverForm');
+  if (recoverForm) {
+    var recoverEmail = document.getElementById('email');
+    var recoverBtn = document.getElementById('recoverBtn');
+    var recoverError = document.getElementById('error-email');
+    recoverEmail.addEventListener('input', function () { recoverError.classList.add('hidden'); });
+
+    recoverForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = recoverEmail.value.trim();
+      if (!email || !recoverEmail.checkValidity()) { recoverError.classList.remove('hidden'); return; }
+
+      recoverBtn.disabled = true;
+      fetch('/api/recuperar-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.sucesso) {
+          document.getElementById('recoverContainer').classList.add('hidden');
+          document.getElementById('recoverDone').classList.remove('hidden');
+        } else {
+          toast(data.mensagem || 'Informe um e-mail válido.');
+          recoverBtn.disabled = false;
+        }
+      })
+      .catch(function () {
+        toast('Erro ao conectar ao servidor.');
+        recoverBtn.disabled = false;
+      });
+    });
+  }
+
+  /* -------------------- Redefinir senha -------------------- */
+  var resetForm = document.getElementById('resetForm');
+  if (resetForm) {
+    var resetToken = new URLSearchParams(window.location.search).get('token');
+    var resetBtn = document.getElementById('resetBtn');
+    var resetError = document.getElementById('error-senha');
+
+    var showResetState = function (id) {
+      ['resetContainer', 'resetInvalid', 'resetDone'].forEach(function (panel) {
+        document.getElementById(panel).classList.toggle('hidden', panel !== id);
+      });
+    };
+
+    if (!resetToken) showResetState('resetInvalid');
+
+    resetForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var senha = document.getElementById('senha').value;
+      var confirmacao = document.getElementById('senha_confirmacao').value;
+      if (senha.length < 8 || senha !== confirmacao) { resetError.classList.remove('hidden'); return; }
+      resetError.classList.add('hidden');
+
+      resetBtn.disabled = true;
+      fetch('/api/redefinir-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken, senha: senha })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        // The password length is checked above, so a refusal here means the token is no longer valid.
+        showResetState(data.sucesso ? 'resetDone' : 'resetInvalid');
+      })
+      .catch(function () {
+        toast('Erro ao conectar ao servidor.');
+        resetBtn.disabled = false;
+      });
+    });
+  }
+
   /* -------------------- Wizard de cadastro -------------------- */
   var wizard = document.getElementById('wizard');
   if (wizard) initWizard(wizard);
