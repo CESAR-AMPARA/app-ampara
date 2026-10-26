@@ -1,5 +1,7 @@
 # Multi-Tenant Authentication and Registration Backend
 
+*Phase: MVP #1 (backbone). Story-map cards: "As a user, I want to log in securely from any device to access AMPARA quickly and without additional registration" (value 100, 1 point); "As an admin, I want to manage access permissions so that only authorized people see sensitive data" (value 500, 5 points); "As a user, I want my data and the students' data to be handled according to the LGPD to guarantee full privacy" (value 800, 3 points).*
+
 *This specification defines the backend implementation of the multi-tenant database routing and user onboarding flow. Its frontend counterpart has already shipped and consumes the contract below; its behaviour is recorded in `frontend/test/test_cadastro_wizard.js` and `frontend/test/test_login_routing.js`.*
 
 ## Problem
@@ -43,6 +45,9 @@ Each school has an isolated database containing the tables specific to that scho
 - `aceite_sigilo` (BOOLEAN, nullable=False)
 - `mfa_secret` (VARCHAR(100), nullable=True)
 - `created_at` (TIMESTAMP)
+
+### Session Token
+The "signed JWT" returned by both login phases is an HS256 token signed with `jwt_signing_key`, resolved through the credentials adapter of [todo/0010-backend-foundation-and-delivery-hardening-backend.md](0010-backend-foundation-and-delivery-hardening-backend.md), carrying the claims `sub` (the tenant `usuarios.id`), `tenant_id`, `perfil`, `iat`, and `exp` set to `iat` plus 8 hours, one school shift. The request guard that validates it on every protected route is specified in [todo/0011-access-management-backend.md](0011-access-management-backend.md).
 
 ### API Endpoints and Contracts
 

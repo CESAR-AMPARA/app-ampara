@@ -27,6 +27,16 @@ A feature that moves both sides is therefore **two specs**, written together and
 
 Written this way, either side can start immediately: the contract is pinned before either developer opens an editor, and the frontend can be built and tested against it before the backend ships.
 
+## Release phase
+
+Every spec states, on the line right under its title, the story-map release it belongs to and the story-map cards it delivers, translated to English with the card's value and points. The releases are the three rows of the team's story map:
+
+- `MVP #1 (backbone)`: the smallest flow a school can run end to end — log in, record an observation, read a student's history, refer the student, triage the referral, and follow the case — with access control and LGPD guarantees.
+- `Increment #2 (walking skeleton)`: the second release, which turns recorded data into review, alerts, dashboards, reports, audit, and shared material.
+- `Increments #3 to N (other)`: everything after, including the AI features, which need the data volume the first two releases produce.
+
+The line reads `*Phase: MVP #1 (backbone). Story-map cards: "…" (value 500, 3 points).*` and is followed by the pairing note. Pick work from the earliest phase that still has open specs, and follow the dependencies each pairing note names rather than the numbers, which only record the order specs were written in. `grep -l "Phase: MVP" todo/*.md` lists what is left of a release.
+
 ## Writing
 
 These rules govern the text of a spec. They don't govern chat, commit messages, or code comments. Where they and the sample spec below disagree, the rules win and the sample gets fixed.
@@ -97,6 +107,10 @@ Decimal point, comma thousands separator: 1,234.56. Percent closed up: 40%. Unit
 
 ```markdown
 # {Feature title}
+
+*Phase: {MVP #1 (backbone) | Increment #2 (walking skeleton) | Increments #3 to N (other)}. Story-map cards: "{card}" (value {N}, {P} points).*
+
+*{Pairing note: counterpart spec by link, whether it ships independently, dependencies.}*
 
 ## Problem
 {The user-facing problem, in the user's words. What can't they do today, and why does that hurt? No solution here.}

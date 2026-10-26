@@ -1,5 +1,7 @@
 # Password Reset Backend
 
+*Phase: MVP #1 (backbone). Story-map card: "As a user, I want to log in securely from any device to access AMPARA quickly and without additional registration" (value 100, 1 point).*
+
 *This specification defines the backend of the "Esqueci minha senha" flow. Its frontend counterpart has already shipped and consumes the contract below (`frontend/public/recuperar_senha.html` and `frontend/public/redefinir_senha.html`, recorded in `frontend/test/test_password_reset.js`); this spec depends on the Master database and tenant routing from [todo/0002-multi-tenant-auth-registration-backend.md](0002-multi-tenant-auth-registration-backend.md).*
 
 ## Problem

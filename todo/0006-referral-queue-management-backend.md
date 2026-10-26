@@ -1,5 +1,7 @@
 # Referral Queue Management Backend
 
+*Phase: MVP #1 (backbone). Story-map cards: "As a Pedagogical Coordinator, I want to manage the queue of referrals to psychologists or social workers" (value 500, 5 points); "As a user, I want to track the status of a referral (Pending, In Care, Finished)" (value 300, 3 points); "As a Teacher, I want to refer a student to the coordination with one click from a recorded observation" (value 500, 3 points).*
+
 *This specification defines the backend implementation of the student referral database model, status transitions, and coordinator/psychologist APIs, Its frontend counterpart has already shipped and consumes the contract below; its behaviour is recorded in `frontend/test/test_referral_queue_table.js`, `frontend/test/test_triage_modal_interactions.js`, and `frontend/test/test_psychologist_actions.js`.*
 
 ## Problem
