@@ -80,22 +80,6 @@ def conta_pendente():
     )
 
 
-@app.route("/dashboard_gestao")
-def dashboard_gestao():
-    """Render the school manager dashboard."""
-    return render_template(
-        "dashboard_gestao.html"
-    )
-
-
-@app.route("/dashboard_saude")
-def dashboard_saude():
-    """Render the multidisciplinary team dashboard."""
-    return render_template(
-        "dashboard_saude.html"
-    )
-
-
 @app.route("/recuperar_senha")
 def recuperar_senha():
     """Render the password recovery request page."""

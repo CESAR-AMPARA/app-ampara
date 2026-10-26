@@ -56,19 +56,15 @@
   /* -------------------- Redirecionamento RBAC -------------------- */
   // Clean URLs resolve both on Flask routes and on nginx (try_files $uri.html).
   var PENDING_URL = '/conta_pendente';
-
-  function routeByProfile(perfil) {
-    if (perfil === 'gestor_escolar') return '/dashboard_gestao';
-    if (perfil === 'equipe_multidisciplinar') return '/dashboard_saude';
-    return '/dashboard';
-  }
+  // Every profile lands on the same dashboard, which picks its panel from usuarioLogado.perfil.
+  var DASHBOARD_URL = '/dashboard';
 
   function startSession(data) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('usuario', JSON.stringify(data.usuario));
     // dashboard.html still reads the logged user from sessionStorage.
     sessionStorage.setItem('usuarioLogado', JSON.stringify(data.usuario));
-    window.location.href = routeByProfile(data.usuario.perfil);
+    window.location.href = DASHBOARD_URL;
   }
 
   /* -------------------- Login Flow -------------------- */
@@ -765,4 +761,8 @@
     clearTimeout(toastEl._t);
     toastEl._t = setTimeout(function () { toastEl.style.opacity = '0'; }, 3800);
   }
+
+  // dashboard.html's inline script calls these as globals.
+  window.toast = toast;
+  window.apiRequest = apiRequest;
 })();
