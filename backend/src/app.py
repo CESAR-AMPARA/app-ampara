@@ -1,7 +1,6 @@
 """Flask application for the App Ampara system."""
 
 import os
-import json
 from dotenv import load_dotenv
 from flask import (
     Flask,
@@ -154,48 +153,11 @@ def cadastrar():
 
 @app.route("/api/login", methods=["POST"])
 def login():
-    """Authenticate a user using credentials file or database fallback."""
+    """Authenticate a user against the database."""
     dados = request.json
     email_input = dados.get("email")
     senha_input = dados.get("senha")
 
-    # 1. Verificar no credentials.json primeiro (para simulação de perfis)
-    paths_to_check = [
-        "credentials.json",
-        os.path.join(_CURRENT_DIR, "credentials.json"),
-        os.path.join(_CURRENT_DIR, "../credentials.json"),
-        os.path.join(_CURRENT_DIR, "../../credentials.json")
-    ]
-    creds_path = None
-    for p in paths_to_check:
-        if os.path.exists(p):
-            creds_path = p
-            break
-
-    if creds_path:
-        try:
-            with open(creds_path, "r", encoding="utf-8") as f:
-                creds = json.load(f)
-                if email_input in creds:
-                    user_info = creds[email_input]
-                    if user_info.get("senha") == senha_input:
-                        return jsonify({
-                            "sucesso": True,
-                            "usuario": {
-                                "nome": user_info.get("nome"),
-                                "email": email_input,
-                                "perfil": user_info.get("perfil"),
-                                "escola": user_info.get("escola")
-                            }
-                        })
-                    return jsonify({
-                        "sucesso": False,
-                        "mensagem": "Senha inválida."
-                    })
-        except (OSError, json.JSONDecodeError) as e:
-            print(f"Erro ao carregar credentials.json: {e}")
-
-    # 2. Fallback para banco de dados tradicional
     usuario = Usuario.query.filter_by(
         email=email_input
     ).first()
