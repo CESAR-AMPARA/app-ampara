@@ -1,6 +1,6 @@
 # Student and Class Management Backend
 
-*This specification defines the backend implementation of the student and class database schemas, manual registration, and spreadsheet-based batch import APIs, which is paired with the frontend specification in [todo/0005-student-class-management-frontend.md](0005-student-class-management-frontend.md).*
+*This specification defines the backend implementation of the student and class database schemas, manual registration, and spreadsheet-based batch import APIs. Its frontend counterpart has already shipped and consumes the contract below; its behaviour is recorded in `frontend/test/test_cadastro_turma_ui.js`, `frontend/test/test_cadastro_estudante_dropdown.js`, and `frontend/test/test_dropzone_behavior.js`.*
 
 ## Problem
 Currently, App A.M.P.A.R.A. has a database model for users but lacks schemas and endpoints for managing classes (`Turmas`) and students (`Estudantes`) in its backend. Without these underlying models, school coordinators cannot register their school's structure, and teachers cannot select a class or student to record behavioral alerts, render metrics, or escalate psychosocial concerns. Furthermore, manual entry of hundreds of students is a high-friction process that would prevent real-world adoption unless supported by efficient batch-import APIs.
@@ -12,14 +12,15 @@ To enable reliable and compliant behavioral monitoring, the backend must support
 We will implement isolated `Turma` and `Estudante` database models within each school's tenant database and expose a set of secure RESTful APIs. These APIs will support:
 - Creating and listing classes manually.
 - Registering individual students and associating them with specific classes.
-- Processing bulk spreadsheet uploads (.csv or .xlsx files) to import whole classes and student lists in seconds.
+- Processing bulk spreadsheet uploads (.csv or .xlsx files) to import class lists and student lists in seconds.
 - Restricting access so that coordinators can read/write data in their tenant database, while teachers have read-only access to search and view students within their authorized classes.
 
 ## User Stories
 1. As a Coordenador Pedagógico, I want to create a new class with its name and academic period, so that I can organize my school's structure.
 2. As a Coordenador Pedagógico, I want to add a student manually by providing their full name and registration number, so that I can keep my student rosters updated.
 3. As a Coordenador Pedagógico, I want to upload a CSV spreadsheet containing a list of students, so that I can import whole classes at once without manual typing.
-4. As a Docente, I want to search and list students within my classes, so that I can select them to log behavioral annotations or absences.
+4. As a Coordenador Pedagógico, I want to upload a spreadsheet listing my school's classes and their shifts, so that I can set up the class structure before importing students.
+5. As a Docente, I want to search and list students within my classes, so that I can select them to log behavioral annotations or absences.
 
 ## Implementation Decisions
 
@@ -129,7 +130,31 @@ We will add two new models in `src/models.py` inside each school's tenant databa
 }
 ```
 
-#### 5. Bulk Import Students
+#### 5. Bulk Import Classes
+`POST /api/turmas/import`
+- Description: Accepts a CSV file or Excel spreadsheet in a multipart form-data payload and registers each row as a class in the active tenant database. It exists so that coordinators can set each class's `turno` up front; the student import below only creates missing classes with the default `"integral"` shift.
+- Headers: `Authorization: Bearer <token>` (Accessible only to coordinator)
+- Payload: multipart/form-data with file key `file` (maximum size 5MB)
+- File Format Requirements (CSV columns): `nome`, `turno`
+- Actions:
+  - Parses each row. A row whose `turno` is not one of `"matutino"`, `"vespertino"`, `"noturno"`, `"integral"`, or whose `nome` already exists in the tenant, is skipped and reported in `erros`; the remaining rows are inserted in a single transaction.
+- Response Status: 200 OK
+- Response Body:
+```json
+{
+  "sucesso": true,
+  "mensagem": "Planilha importada com sucesso.",
+  "importados": 8,
+  "erros": [
+    {
+      "linha": 3,
+      "motivo": "Turma 1º Ano A já cadastrada."
+    }
+  ]
+}
+```
+
+#### 6. Bulk Import Students
 `POST /api/estudantes/import`
 - Description: Accepts a CSV file or Excel spreadsheet in a multipart form-data payload, parses student rows, and registers them in bulk under the active tenant database.
 - Headers: `Authorization: Bearer <token>` (Accessible only to coordinator)
@@ -154,15 +179,18 @@ We will add two new models in `src/models.py` inside each school's tenant databa
 }
 ```
 
+#### Spreadsheet Rejection (both bulk imports)
+Both import endpoints reject the whole upload, before parsing any row, when the file is missing, larger than 5MB, or neither CSV nor `.xlsx`, returning status 400 Bad Request with: `{"sucesso": false, "mensagem": "Erro: Formato de arquivo não suportado. Use apenas planilhas CSV ou Excel."}`. The frontend validates the same rules before uploading, so this response only reaches users who bypass the page.
+
 ## Testing Decisions
 We will write comprehensive tests in the following new modules under `backend/test/`:
 - `test/test_models_turma_estudante.py`: Verifies database constraints (uniqueness of matricula within tenant, foreign keys, cascade deletes).
-- `test/test_api_turma.py`: Tests the manual `/api/turmas` endpoints, checking role-based permissions (allowing gestor_escolar, denying docente from writing).
+- `test/test_api_turma.py`: Tests the manual `/api/turmas` endpoints and `/api/turmas/import`, checking role-based permissions (allowing gestor_escolar, denying docente from writing) and the per-row errors for invalid `turno` and duplicate `nome`.
 - `test/test_api_estudante.py`: Tests manual student registration and search filtering.
 - `test/test_api_estudante_import.py`: Tests bulk CSV parsing. Uses mock stream objects to simulate file upload and verifies bulk database transactions and error reports.
 
 ## Out of Scope
-- Interactive frontend forms, upload fields, and progress bar animations (fully specified in the paired frontend specification [todo/0005-student-class-management-frontend.md](0005-student-class-management-frontend.md)).
+- Interactive frontend forms, upload fields, and progress bar animations, already shipped in `frontend/public/cadastro_turma.html` and `frontend/public/cadastro_estudante.html`.
 - Dynamic synchronization of school rosters with state or federal education databases.
 - Deletion or editing of students' past academic records.
 

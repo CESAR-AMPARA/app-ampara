@@ -127,7 +127,7 @@
       </span>
     </a>
     <div class="header-actions">
-      <a class="btn btn-outline" href="dashboard.html">← Voltar ao Painel</a>
+      <a class="btn btn-outline" href="/dashboard">← Voltar ao Painel</a>
     </div>
   </header>
 
@@ -166,12 +166,7 @@
         <div class="field">
           <label for="turma-estudante">Turma Designada <span class="req">*</span></label>
           <select id="turma-estudante" class="input-plain" required>
-            <option value="" disabled selected>Selecione a turma...</option>
-            <option value="1a">1º Ano A</option>
-            <option value="1b">1º Ano B</option>
-            <option value="2a">2º Ano A</option>
-            <option value="2b">2º Ano B</option>
-            <option value="3a">3º Ano A</option>
+            <option value="" disabled selected>Carregando turmas...</option>
           </select>
         </div>
 
@@ -187,7 +182,7 @@
         <h2>Importar Planilha de Estudantes</h2>
         <p class="sub">Selecione ou arraste uma planilha CSV ou Excel (.xlsx) contendo a lista de estudantes e matrículas.</p>
 
-        <div class="drop-zone" id="drop-zone-estudante">
+        <div class="drop-zone" id="drop-zone-estudante" data-import-url="/api/estudantes/import" data-import-kind="estudantes" role="button" tabindex="0" aria-label="Selecionar planilha para importação">
           <div class="icon">📂</div>
           <div class="text">Arraste e solte o arquivo aqui</div>
           <div class="subtext">ou clique para selecionar do seu dispositivo</div>
@@ -202,6 +197,8 @@
         <div class="progress-bar-container" id="progress-container-estudante">
           <div class="progress-bar-fill" id="progress-fill-estudante"></div>
         </div>
+
+        <div class="import-summary hidden" id="import-summary-estudante" role="status"></div>
 
         <button type="button" class="btn btn-primary" id="btn-importar-estudante" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;" disabled>
           Processar Importação
@@ -219,143 +216,5 @@
   </footer>
 
   <script src="/js/main.js"></script>
-  <script>
-    // JS interativo para a página de Estudantes
-    (function() {
-      'use strict';
-
-      // Gerenciamento de Abas (Tabs)
-      const tabs = document.querySelectorAll('.tab-btn');
-      const panels = document.querySelectorAll('.tab-panel');
-
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          const target = tab.getAttribute('aria-controls');
-
-          tabs.forEach(t => {
-            t.classList.remove('active');
-            t.setAttribute('aria-selected', 'false');
-          });
-          panels.forEach(p => p.classList.remove('active'));
-
-          tab.classList.add('active');
-          tab.setAttribute('aria-selected', 'true');
-          document.getElementById(target).classList.add('active');
-        });
-      });
-
-      // Validação do Formulário Manual
-      const form = document.getElementById('form-cadastro-estudante');
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const nome = document.getElementById('nome-estudante').value.trim();
-        const matricula = document.getElementById('matricula-estudante').value.trim();
-        const turmaSelect = document.getElementById('turma-estudante');
-        const turmaText = turmaSelect.options[turmaSelect.selectedIndex].text;
-
-        if (!nome || !matricula || !turmaSelect.value) {
-          if (typeof toast === 'function') {
-            toast('Por favor, preencha todos os campos obrigatórios (*).');
-          } else {
-            alert('Por favor, preencha todos os campos obrigatórios (*).');
-          }
-          return;
-        }
-
-        // Simular sucesso
-        if (typeof toast === 'function') {
-          toast(`Estudante "${nome}" cadastrado na turma "${turmaText}"!`);
-        } else {
-          alert(`Estudante "${nome}" cadastrado na turma "${turmaText}"!`);
-        }
-
-        form.reset();
-      });
-
-      // Importação de Arquivos em Lote
-      const dropZone = document.getElementById('drop-zone-estudante');
-      const fileInput = document.getElementById('file-input-estudante');
-      const fileInfo = document.getElementById('file-info-estudante');
-      const fileNameSpan = document.getElementById('file-name-estudante');
-      const progressContainer = document.getElementById('progress-container-estudante');
-      const progressFill = document.getElementById('progress-fill-estudante');
-      const btnImportar = document.getElementById('btn-importar-estudante');
-
-      dropZone.addEventListener('click', () => fileInput.click());
-
-      dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-      });
-
-      dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('dragover');
-      });
-
-      dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length > 0) {
-          handleFileSelected(e.dataTransfer.files[0]);
-        }
-      });
-
-      fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-          handleFileSelected(fileInput.files[0]);
-        }
-      });
-
-      function handleFileSelected(file) {
-        const allowedExtensions = /(\.csv|\.xlsx)$/i;
-        if (!allowedExtensions.exec(file.name)) {
-          if (typeof toast === 'function') {
-            toast('Extensão de arquivo inválida. Apenas CSV e Excel são aceitos.');
-          } else {
-            alert('Extensão de arquivo inválida. Apenas CSV e Excel são aceitos.');
-          }
-          btnImportar.disabled = true;
-          fileInfo.style.display = 'none';
-          return;
-        }
-
-        fileNameSpan.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-        fileInfo.style.display = 'block';
-        btnImportar.disabled = false;
-        
-        // Reset progress
-        progressContainer.style.display = 'none';
-        progressFill.style.width = '0%';
-      }
-
-      btnImportar.addEventListener('click', () => {
-        btnImportar.disabled = true;
-        progressContainer.style.display = 'block';
-        
-        let width = 0;
-        const interval = setInterval(() => {
-          if (width >= 100) {
-            clearInterval(interval);
-            setTimeout(() => {
-              if (typeof toast === 'function') {
-                toast('Relação de estudantes importada com sucesso!');
-              } else {
-                alert('Relação de estudantes importada com sucesso!');
-              }
-              // Reset
-              fileInfo.style.display = 'none';
-              progressContainer.style.display = 'none';
-              progressFill.style.width = '0%';
-              fileInput.value = '';
-            }, 500);
-          } else {
-            width += 5;
-            progressFill.style.width = width + '%';
-          }
-        }, 100);
-      });
-    })();
-  </script>
 </body>
 </html>

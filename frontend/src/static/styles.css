@@ -369,6 +369,20 @@ select.input-plain, input.input-plain, .input-plain {
   display: block; font-size: 0.82rem; color: #c0492e; font-weight: 700; margin-top: 5px;
 }
 
+/* Resumo da importação em lote */
+.import-summary {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--card-inset);
+  border: 1px solid var(--border);
+  font-size: .92rem;
+  color: var(--ink-soft);
+}
+.import-summary p { margin: 0; font-weight: 700; color: var(--ink); }
+.import-summary ul { margin: 8px 0 0; padding-left: 20px; }
+.import-summary li { margin-top: 4px; }
+
 .mfa-box {
   background: var(--card-inset);
   border: 1px solid var(--border-strong);
