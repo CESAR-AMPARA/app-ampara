@@ -96,6 +96,22 @@ def dashboard_saude():
     )
 
 
+@app.route("/recuperar_senha")
+def recuperar_senha():
+    """Render the password recovery request page."""
+    return render_template(
+        "recuperar_senha.html"
+    )
+
+
+@app.route("/redefinir_senha")
+def redefinir_senha():
+    """Render the new password page reached from the reset link."""
+    return render_template(
+        "redefinir_senha.html"
+    )
+
+
 @app.route("/cadastro_turma")
 def cadastro_turma():
     """Render the class registration page."""

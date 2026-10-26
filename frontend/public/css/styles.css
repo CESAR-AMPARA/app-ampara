@@ -320,24 +320,6 @@ select.input-plain, input.input-plain, .input-plain {
 .check-row .txt small { display: block; color: var(--muted); font-size: .8rem; }
 .check-row label { margin: 0; font-weight: 400; color: var(--ink-soft); font-size: .92rem; }
 
-/* ---------- Divisor ---------- */
-.divider { display: flex; align-items: center; gap: 14px; margin: 26px 0; color: var(--muted); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; }
-.divider::before, .divider::after { content: ""; height: 1px; background: var(--border); flex: 1; }
-
-.gov-btn {
-  width: 100%;
-  background: var(--sage-badge);
-  border: 1px solid #bcd3cc;
-  color: var(--sage-badge-tx);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  font: inherit; font-weight: 700;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  cursor: pointer;
-}
-.gov-btn:hover { background: #c4d9d2; }
-.gov-tag { background: var(--navy); color: #fff; font-size: .68rem; font-weight: 800; padding: 3px 6px; border-radius: 5px; letter-spacing: .04em; }
-
 .form-foot { margin-top: 22px; font-size: .9rem; color: var(--ink-soft); }
 .form-foot .compliance { margin-top: 14px; display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
 .form-foot .compliance .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage-deep); }
