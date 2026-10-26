@@ -1,0 +1,88 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.11'
+        cache: pip
+        cache-dependency-path: requirements.txt
+
+    - name: Run Install
+      run: |
+        chmod +x dev.sh
+        ./dev.sh install
+
+    - name: Run Linter (Pylint Quality Gate)
+      run: ./dev.sh lint
+
+    # fail_under in backend/.coveragerc makes the report step fail below 90%.
+    - name: Run Tests (Coverage Gate)
+      run: ./dev.sh test
+
+  frontend-tests:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend/test
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v5
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: '22'
+        cache: npm
+        cache-dependency-path: frontend/test/package-lock.json
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Run Frontend Tests
+      run: npm test
+
+  build-image:
+    needs: [test-and-lint, frontend-tests]
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v5
+
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag ampara-web:ci
+
+    - name: Smoke Test the Container
+      run: |
+        docker run -d --name ampara-web -p 8080:80 ampara-web:ci
+        for _ in $(seq 1 30); do
+          if curl -fsS -o /dev/null http://localhost:8080/login; then
+            echo "Container is serving /login."
+            exit 0
+          fi
+          sleep 1
+        done
+        docker logs ampara-web
+        exit 1
