@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel da Gestão — A.M.P.A.R.A.</title>
+  <meta name="description" content="Dashboard da Gestão Escolar." />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </span>
+      <span>
+        <span class="name">A.M.P.A.R.A.</span>
+        <span class="tagline">Gestão Escolar</span>
+      </span>
+    </a>
+    <div class="header-actions">
+      <a class="header-link" href="#" onclick="localStorage.clear(); sessionStorage.clear(); window.location.href='/login'; return false;">Sair</a>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 40px; padding-bottom: 80px;">
+    <h1>Painel da Gestão</h1>
+    <p class="muted">Gerenciamento de contas pendentes e aprovação institucional.</p>
+    
+    <div class="wizard-card" style="margin-top: 32px;">
+      <h2>Usuários Pendentes</h2>
+      <p class="desc">Revise e aprove o cadastro dos novos professores e equipes de saúde.</p>
+      <div id="pendentes-list" style="margin-top: 24px;">
+        <p class="muted">Carregando lista...</p>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

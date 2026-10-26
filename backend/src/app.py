@@ -72,6 +72,46 @@ def dashboard():
     )
 
 
+@app.route("/conta_pendente")
+def conta_pendente():
+    """Render the pending account review page."""
+    return render_template(
+        "conta_pendente.html"
+    )
+
+
+@app.route("/dashboard_gestao")
+def dashboard_gestao():
+    """Render the school manager dashboard."""
+    return render_template(
+        "dashboard_gestao.html"
+    )
+
+
+@app.route("/dashboard_saude")
+def dashboard_saude():
+    """Render the multidisciplinary team dashboard."""
+    return render_template(
+        "dashboard_saude.html"
+    )
+
+
+@app.route("/recuperar_senha")
+def recuperar_senha():
+    """Render the password recovery request page."""
+    return render_template(
+        "recuperar_senha.html"
+    )
+
+
+@app.route("/redefinir_senha")
+def redefinir_senha():
+    """Render the new password page reached from the reset link."""
+    return render_template(
+        "redefinir_senha.html"
+    )
+
+
 @app.route("/cadastro_turma")
 def cadastro_turma():
     """Render the class registration page."""

@@ -1,0 +1,16 @@
+{
+  "name": "ampara-frontend-tests",
+  "version": "1.0.0",
+  "description": "Frontend tests for App A.M.P.A.R.A.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "jsdom": "25.0.1"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
