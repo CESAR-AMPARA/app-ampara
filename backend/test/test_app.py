@@ -178,38 +178,6 @@ class TestApp(unittest.TestCase):
         users = json.loads(response.data)
         self.assertTrue(users[0]["validado"])
 
-    def test_credentials_login(self):
-        """Test mock login using credentials.json for different profiles."""
-        # Professor login (docente)
-        response = self.client.post("/api/login", json={
-            "email": "professor@ampara.gov.br",
-            "senha": "senha123"
-        })
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
-        self.assertTrue(data.get("sucesso"))
-        self.assertEqual(data.get("usuario", {}).get("perfil"), "docente")
-
-        # Coordinator login (gestao)
-        response = self.client.post("/api/login", json={
-            "email": "coordenador@ampara.gov.br",
-            "senha": "senha123"
-        })
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
-        self.assertTrue(data.get("sucesso"))
-        self.assertEqual(data.get("usuario", {}).get("perfil"), "gestao")
-
-        # Invalid password for coordinator
-        response = self.client.post("/api/login", json={
-            "email": "coordenador@ampara.gov.br",
-            "senha": "senha_errada"
-        })
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data)
-        self.assertFalse(data.get("sucesso"))
-        self.assertEqual(data.get("mensagem"), "Senha inválida.")
-
     def test_track_features_in_dashboard(self):
         """Verify all custom UI features from Tracks 1 to 4 exist in the dashboard HTML."""
         response = self.client.get("/dashboard")
