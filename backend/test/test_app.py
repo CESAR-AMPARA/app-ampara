@@ -47,6 +47,31 @@ class TestApp(unittest.TestCase):
         response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 200)
 
+    def test_conta_pendente_page(self):
+        """Verify the pending account page renders correctly."""
+        response = self.client.get("/conta_pendente")
+        self.assertEqual(response.status_code, 200)
+
+    def test_dashboard_gestao_page(self):
+        """Verify the school manager dashboard renders correctly."""
+        response = self.client.get("/dashboard_gestao")
+        self.assertEqual(response.status_code, 200)
+
+    def test_dashboard_saude_page(self):
+        """Verify the multidisciplinary dashboard renders correctly."""
+        response = self.client.get("/dashboard_saude")
+        self.assertEqual(response.status_code, 200)
+
+    def test_recuperar_senha_page(self):
+        """Verify the password recovery page renders correctly."""
+        response = self.client.get("/recuperar_senha")
+        self.assertEqual(response.status_code, 200)
+
+    def test_redefinir_senha_page(self):
+        """Verify the new password page renders correctly."""
+        response = self.client.get("/redefinir_senha?token=abc")
+        self.assertEqual(response.status_code, 200)
+
     def test_cadastro_turma_page(self):
         """Verify the cadastro turma page renders correctly."""
         response = self.client.get("/cadastro_turma")

@@ -1,6 +1,5 @@
 /* ==========================================================================
-   A.M.P.A.R.A. — Comportamento das telas
-   Sem dependências externas. Roda em qualquer página que inclua os elementos.
+   A.M.P.A.R.A. — main.js
    ========================================================================== */
 (function () {
   'use strict';
@@ -18,7 +17,6 @@
     try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {}
   }
   function applyState() {
-    // Escala de fonte: 1 / 1.15 / 1.3
     document.documentElement.style.setProperty('--fs-scale', state.font || 1);
     document.body.classList.toggle('high-contrast', !!state.contrast);
     document.querySelectorAll('[data-action="contrast"]').forEach(function (b) {
@@ -55,54 +53,208 @@
     });
   });
 
-  /* -------------------- Login (demo) -------------------- */
-  var loginForm = document.getElementById('loginForm');
-  if (loginForm) {
-    // Limpar cache atual para simulação limpa
-    sessionStorage.clear();
-    localStorage.clear();
+  /* -------------------- Redirecionamento RBAC -------------------- */
+  // Clean URLs resolve both on Flask routes and on nginx (try_files $uri.html).
+  var PENDING_URL = '/conta_pendente';
 
+  function routeByProfile(perfil) {
+    if (perfil === 'gestor_escolar') return '/dashboard_gestao';
+    if (perfil === 'equipe_multidisciplinar') return '/dashboard_saude';
+    return '/dashboard';
+  }
+
+  function startSession(data) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('usuario', JSON.stringify(data.usuario));
+    // dashboard.html still reads the logged user from sessionStorage.
+    sessionStorage.setItem('usuarioLogado', JSON.stringify(data.usuario));
+    window.location.href = routeByProfile(data.usuario.perfil);
+  }
+
+  /* -------------------- Login Flow -------------------- */
+  var loginForm = document.getElementById('loginForm');
+  var mfaForm = document.getElementById('mfaForm');
+  var credentialsContainer = document.getElementById('credentialsContainer');
+  var mfaContainer = document.getElementById('mfaContainer');
+  var resendMfaLink = document.getElementById('resendMfaLink');
+  var currentSessionToken = null;
+
+  if (loginForm) {
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!loginForm.checkValidity()) { loginForm.reportValidity(); return; }
-      
-      var email = document.getElementById('email').value.trim();
-      var senha = document.getElementById('senha').value;
+      submitCredentials();
+    });
+  }
 
-      var mockCreds = {
-        "professor@ampara.gov.br": {
-          "nome": "Prof. Ricardo Souza",
-          "perfil": "docente",
-          "escola": "Escola Estadual Castro Alves",
-          "senha": "senha123"
-        },
-        "coordenador@ampara.gov.br": {
-          "nome": "Coordenadora Márcia Silva",
-          "perfil": "gestao",
-          "escola": "Escola Estadual Castro Alves",
-          "senha": "senha123"
-        }
-      };
+  if (resendMfaLink) {
+    resendMfaLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      submitCredentials(function () { toast('Enviamos um novo código de verificação.'); });
+    });
+  }
 
-      if (email in mockCreds) {
-        var user = mockCreds[email];
-        if (user.senha === senha) {
-          sessionStorage.setItem("usuarioLogado", JSON.stringify({
-            "nome": user.nome,
-            "email": email,
-            "perfil": user.perfil,
-            "escola": user.escola
-          }));
-          toast('Login realizado. Redirecionando…');
-          setTimeout(function() {
-            window.location.href = 'dashboard.html';
-          }, 1000);
-        } else {
-          toast('Senha inválida.');
-        }
-      } else {
-        toast('E-mail ou senha inválidos.');
+  function submitCredentials(onMfaSent) {
+    var email = document.getElementById('email').value.trim();
+    var senha = document.getElementById('senha').value;
+
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, senha: senha })
+    })
+    .then(function(res) {
+      if (res.status === 403) {
+         return res.json().then(function(data) {
+           if (data.status === 'pendente') {
+             window.location.href = PENDING_URL;
+           } else {
+             toast(data.mensagem || 'Conta bloqueada.');
+           }
+           throw new Error('Forbidden');
+         });
       }
+      return res.json();
+    })
+    .then(function(data) {
+      if (!data.sucesso) {
+        if (data.status === 'pendente') {
+          window.location.href = PENDING_URL;
+        } else {
+          toast(data.mensagem || 'E-mail ou senha incorretos.');
+        }
+        return;
+      }
+
+      if (data.mfa_required) {
+        currentSessionToken = data.session_token;
+        credentialsContainer.classList.add('hidden');
+        mfaContainer.classList.remove('hidden');
+        document.getElementById('mfa_code').focus();
+        if (onMfaSent) onMfaSent();
+      } else {
+        startSession(data);
+      }
+    })
+    .catch(function(err) {
+      if (err.message !== 'Forbidden') toast('Erro ao conectar ao servidor.');
+    });
+  }
+
+  if (mfaForm) {
+    mfaForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var code = document.getElementById('mfa_code').value.trim();
+      if (!/^\d{6}$/.test(code)) {
+        toast('Informe o código de 6 dígitos enviado para você.');
+        return;
+      }
+
+      fetch('/api/login/mfa-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: currentSessionToken, mfa_code: code })
+      })
+      .then(function(res) {
+        if (res.status === 403) {
+           return res.json().then(function(data) {
+             if (data.status === 'suspenso') {
+               toast(data.mensagem || 'Conta bloqueada.');
+             } else {
+               window.location.href = PENDING_URL;
+             }
+             throw new Error('Forbidden');
+           });
+        }
+        return res.json();
+      })
+      .then(function(data) {
+        if (!data.sucesso) {
+          toast(data.mensagem || 'Código inválido.');
+          return;
+        }
+        startSession(data);
+      })
+      .catch(function(err) {
+        if (err.message !== 'Forbidden') toast('Erro ao verificar código.');
+      });
+    });
+  }
+
+  /* -------------------- Esqueci minha senha -------------------- */
+  var recoverForm = document.getElementById('recoverForm');
+  if (recoverForm) {
+    var recoverEmail = document.getElementById('email');
+    var recoverBtn = document.getElementById('recoverBtn');
+    var recoverError = document.getElementById('error-email');
+    recoverEmail.addEventListener('input', function () { recoverError.classList.add('hidden'); });
+
+    recoverForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = recoverEmail.value.trim();
+      if (!email || !recoverEmail.checkValidity()) { recoverError.classList.remove('hidden'); return; }
+      recoverError.classList.add('hidden');
+
+      recoverBtn.disabled = true;
+      fetch('/api/recuperar-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.sucesso) {
+          document.getElementById('recoverContainer').classList.add('hidden');
+          document.getElementById('recoverDone').classList.remove('hidden');
+        } else {
+          toast(data.mensagem || 'Informe um e-mail válido.');
+          recoverBtn.disabled = false;
+        }
+      })
+      .catch(function () {
+        toast('Erro ao conectar ao servidor.');
+        recoverBtn.disabled = false;
+      });
+    });
+  }
+
+  /* -------------------- Redefinir senha -------------------- */
+  var resetForm = document.getElementById('resetForm');
+  if (resetForm) {
+    var resetToken = new URLSearchParams(window.location.search).get('token');
+    var resetBtn = document.getElementById('resetBtn');
+    var resetError = document.getElementById('error-senha');
+
+    var showResetState = function (id) {
+      ['resetContainer', 'resetInvalid', 'resetDone'].forEach(function (panel) {
+        document.getElementById(panel).classList.toggle('hidden', panel !== id);
+      });
+    };
+
+    if (!resetToken) showResetState('resetInvalid');
+
+    resetForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var senha = document.getElementById('senha').value;
+      var confirmacao = document.getElementById('senha_confirmacao').value;
+      if (senha.length < 8 || senha !== confirmacao) { resetError.classList.remove('hidden'); return; }
+      resetError.classList.add('hidden');
+
+      resetBtn.disabled = true;
+      fetch('/api/redefinir-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetToken, senha: senha })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        // The password length is checked above, so a refusal here means the token is no longer valid.
+        showResetState(data.sucesso ? 'resetDone' : 'resetInvalid');
+      })
+      .catch(function () {
+        toast('Erro ao conectar ao servidor.');
+        resetBtn.disabled = false;
+      });
     });
   }
 
@@ -111,9 +263,30 @@
   if (wizard) initWizard(wizard);
 
   function initWizard(form) {
-    var TOTAL = 3;
+    var TOTAL = 4;
     var current = 1;
     var chosenRole = null;
+
+    // Carregar Escolas
+    var selectEscola = document.getElementById('escola_id');
+    if (selectEscola) {
+      fetch('/api/schools')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          selectEscola.innerHTML = '<option value="" selected disabled>Selecione sua escola...</option>';
+          if (data.schools) {
+            data.schools.forEach(function(s) {
+              var opt = document.createElement('option');
+              opt.value = s.id;
+              opt.textContent = s.nome;
+              selectEscola.appendChild(opt);
+            });
+          }
+        })
+        .catch(function() {
+          selectEscola.innerHTML = '<option value="" selected disabled>Erro ao carregar escolas</option>';
+        });
+    }
 
     // Seleção de perfil RBAC
     var roleCards = form.querySelectorAll('.rbac-card');
@@ -122,36 +295,40 @@
         roleCards.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
         card.setAttribute('aria-pressed', 'true');
         chosenRole = card.getAttribute('data-role');
+        hideError('error-perfil');
+        
+        var regField = document.getElementById('field-registro');
+        if (regField) {
+          if (chosenRole === 'equipe_multidisciplinar') {
+            regField.classList.remove('hidden');
+          } else {
+            regField.classList.add('hidden');
+            document.getElementById('registro_profissional').value = '';
+          }
+        }
       });
     });
 
-    // Encadeamento Estado → Município → Escola
-    var estado = document.getElementById('estado');
-    var municipio = document.getElementById('municipio');
-    var escola = document.getElementById('escola');
-    if (estado) {
-      estado.addEventListener('change', function () {
-        var has = !!estado.value;
-        municipio.disabled = !has;
-        municipio.placeholder = has ? 'Digite o município...' : 'Selecione o estado primeiro';
-        escola.disabled = !has;
+    // Telefone Mask
+    var telInput = document.getElementById('telefone');
+    if (telInput) {
+      telInput.addEventListener('input', function(e) {
+        var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
       });
     }
 
     // Força de senha
-    var pass1 = document.getElementById('pass1');
-    var pass2 = document.getElementById('pass2');
+    var pass1 = document.getElementById('senha');
+    var pass2 = document.getElementById('senha_confirmacao');
     var fill = document.getElementById('strengthFill');
     var strengthLabel = document.getElementById('strengthLabel');
     var matchMsg = document.getElementById('matchMsg');
     var submitBtn = document.getElementById('submitBtn');
-    var t1 = document.getElementById('t1');
-    var t2 = document.getElementById('t2');
-
+    
     if (pass1) {
-      pass1.addEventListener('input', function () { renderStrength(); checkMatch(); refreshSubmit(); });
-      pass2.addEventListener('input', function () { checkMatch(); refreshSubmit(); });
-      [t1, t2].forEach(function (c) { c.addEventListener('change', refreshSubmit); });
+      pass1.addEventListener('input', function () { renderStrength(); checkMatch(); });
+      pass2.addEventListener('input', function () { checkMatch(); });
     }
 
     function scoreOf(v) {
@@ -185,14 +362,22 @@
       matchMsg.textContent = ok ? '✓ As senhas coincidem.' : '✗ As senhas não coincidem.';
       matchMsg.classList.toggle('bad', !ok);
     }
-    function refreshSubmit() {
-      var ok = pass1.value.length >= 8 &&
-               pass1.value === pass2.value &&
-               t1.checked && t2.checked;
-      submitBtn.disabled = !ok;
-    }
 
-    // Navegação entre etapas
+    // Erros helper
+    function showError(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    }
+    function hideError(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+    document.querySelectorAll('input, select').forEach(function(el) {
+      el.addEventListener('input', function() { hideError('error-' + el.id); });
+      el.addEventListener('change', function() { hideError('error-' + el.id); });
+    });
+
+    // Navegação
     form.querySelectorAll('[data-next]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         if (!validateStep(current)) return;
@@ -205,47 +390,107 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (submitBtn.disabled) return;
-      goTo(4); // tela de sucesso
+      // Pressing Enter inside an earlier step submits the form; treat it as "Próximo".
+      if (current < TOTAL) {
+        if (validateStep(current)) goTo(current + 1);
+        return;
+      }
+      if (!validateStep(4)) return;
+
+      var registro = document.getElementById('registro_profissional').value.trim();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+
+      var payload = {
+        escola_id: document.getElementById('escola_id').value,
+        nome: document.getElementById('nome').value.trim(),
+        telefone: document.getElementById('telefone').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        perfil: chosenRole,
+        matricula: document.getElementById('matricula').value.trim(),
+        cargo: document.getElementById('cargo').value.trim(),
+        registro_profissional: (chosenRole === 'equipe_multidisciplinar' && registro) ? registro : null,
+        senha: pass1.value,
+        aceite_lgpd: document.getElementById('aceite_lgpd').checked,
+        aceite_sigilo: document.getElementById('aceite_sigilo').checked
+      };
+
+      fetch('/api/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.sucesso || data.status === 'pendente') {
+          window.location.href = PENDING_URL;
+        } else {
+          toast(data.mensagem || 'Erro ao realizar cadastro.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Concluir Cadastro';
+        }
+      })
+      .catch(function() {
+        toast('Erro ao conectar ao servidor.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Concluir Cadastro';
+      });
     });
 
     function validateStep(step) {
+      var valid = true;
       if (step === 1) {
-        if (!chosenRole) { toast('Selecione um perfil profissional para continuar.'); return false; }
-        return requireFields(['nome', 'tel', 'email']);
+        var esc = document.getElementById('escola_id');
+        if (!esc.value) { showError('error-escola_id'); valid = false; }
       }
-      if (step === 2) {
-        return requireFields(['matricula', 'estado', 'municipio', 'escola']);
+      else if (step === 2) {
+        var nome = document.getElementById('nome');
+        var tel = document.getElementById('telefone');
+        var email = document.getElementById('email');
+        if (!nome.value.trim()) { showError('error-nome'); valid = false; }
+        if (!tel.value.trim() || tel.value.length < 14) { showError('error-telefone'); valid = false; }
+        if (!email.value.trim() || !email.checkValidity()) { showError('error-email'); valid = false; }
       }
-      return true;
-    }
-    function requireFields(ids) {
-      for (var i = 0; i < ids.length; i++) {
-        var el = document.getElementById(ids[i]);
-        if (el && !el.disabled && !String(el.value).trim()) {
-          el.focus();
-          el.reportValidity ? el.reportValidity() : toast('Preencha os campos obrigatórios.');
-          return false;
+      else if (step === 3) {
+        if (!chosenRole) { showError('error-perfil'); valid = false; }
+        var mat = document.getElementById('matricula');
+        var cargo = document.getElementById('cargo');
+        if (!mat.value.trim()) { showError('error-matricula'); valid = false; }
+        if (!cargo.value.trim()) { showError('error-cargo'); valid = false; }
+      }
+      else if (step === 4) {
+        if (!pass1.value || pass1.value.length < 8 || pass1.value !== pass2.value) {
+          showError('error-senha'); valid = false;
         }
+        var c1 = document.getElementById('aceite_lgpd');
+        var c2 = document.getElementById('aceite_sigilo');
+        if (!c1.checked || !c2.checked) { showError('error-termos'); valid = false; }
       }
-      return true;
+      return valid;
     }
 
     function goTo(step) {
-      current = Math.max(1, Math.min(4, step));
+      current = Math.max(1, Math.min(TOTAL, step));
       // Painéis
       form.querySelectorAll('.panel').forEach(function (p) {
         p.classList.toggle('active', +p.getAttribute('data-panel') === current);
       });
-      // Indicador de etapas
+      // Progress track
+      var pct = (current / TOTAL) * 100;
+      var pfill = document.getElementById('progressFill');
+      var ptext = document.getElementById('progressText');
+      if (pfill) pfill.style.width = pct + '%';
+      if (ptext) ptext.textContent = 'Passo ' + current + ' de ' + TOTAL;
+
+      // Steps
       document.querySelectorAll('#steps .step').forEach(function (s) {
         var n = +s.getAttribute('data-step');
         s.classList.remove('active', 'done');
         if (n < current) s.classList.add('done');
         else if (n === current) s.classList.add('active');
-        // etapa "num" vira ✓ quando concluída
         var num = s.querySelector('.num');
-        num.textContent = (n < current) ? '✓' : String(n);
+        if (num) num.textContent = (n < current) ? '✓' : String(n);
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

@@ -1,6 +1,6 @@
 # Multi-Tenant Authentication and Registration Backend
 
-*This specification defines the backend implementation of the multi-tenant database routing and user onboarding flow, which is paired with the frontend specification in [todo/0003-multi-tenant-auth-registration-frontend.md](0003-multi-tenant-auth-registration-frontend.md).*
+*This specification defines the backend implementation of the multi-tenant database routing and user onboarding flow. Its frontend counterpart has already shipped and consumes the contract below; its behaviour is recorded in `frontend/test/test_cadastro_wizard.js` and `frontend/test/test_login_routing.js`.*
 
 ## Problem
 Users of App A.M.P.A.R.A. (including teachers, school managers, and mental health professionals) have strict regulatory, security, and privacy requirements that mandate complete isolation of student and behavioral data between different school institutions. Under the current single-database structure, a breach or accidental exposure in one school could compromise sensitive personal information across all schools, violating Brazil's General Data Protection Law (LGPD - Lei Geral de Proteção de Dados) and breaking the core trust necessary for mental health and behavioral tracking in school environments.
@@ -232,9 +232,9 @@ We will implement extensive unit and integration tests using Python's `unittest`
 - `test/test_api_gestao.py`: Tests the list of pending users and account approval. Verifies that only authenticated managers can approve users and that approved users can successfully log in.
 
 ## Out of Scope
-- Frontend UI components, registration wizard multi-step forms, and CSS styling (which are specified in [todo/0003-multi-tenant-auth-registration-frontend.md](0003-multi-tenant-auth-registration-frontend.md)).
+- Frontend UI components, registration wizard multi-step forms, and CSS styling, already shipped under `frontend/public/`.
 - Automatic database schema migrations for existing tenants.
-- Dynamic password reset and email token verification flows.
+- Password reset, specified in [todo/0008-password-reset-backend.md](0008-password-reset-backend.md).
 - Real SMS/Email gateway integrations; a mock adapter class `src/adapters/mock_mfa_adapter.py` will be used to simulate MFA code delivery in development and tests.
 
 ## Further Notes

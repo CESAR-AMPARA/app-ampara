@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recuperar senha — A.M.P.A.R.A.</title>
+  <meta name="description" content="Receba um link para redefinir sua senha de acesso à rede A.M.P.A.R.A." />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>" />
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+
+  <div class="a11y-bar">
+    <div class="wrap">
+      <span class="label">Acessibilidade</span>
+      <nav aria-label="Ferramentas de acessibilidade">
+        <button class="a11y-btn" data-action="font">A+ Aumentar fonte</button>
+        <button class="a11y-btn" data-action="contrast" aria-pressed="false">◐ Alto contraste</button>
+        <button class="a11y-btn" data-action="reader">🔊 Leitor de tela</button>
+        <a class="a11y-btn" href="#conteudo">Ir para o conteúdo</a>
+      </nav>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+      </span>
+      <span>
+        <span class="name">A.M.P.A.R.A.</span>
+        <span class="tagline">Acolhimento, Monitoramento e Prevenção no Ambiente Escolar</span>
+      </span>
+    </a>
+    <div class="header-actions">
+      <a class="header-link" href="/login">← Voltar para o Login</a>
+    </div>
+  </header>
+
+  <main id="conteudo" class="container">
+    <section class="onboarding">
+      <div class="wizard-card" style="max-width: 560px; margin: 0 auto;">
+        <div id="recoverContainer">
+          <h2>Esqueci minha senha</h2>
+          <p class="desc">Informe o e-mail institucional usado no seu cadastro. Enviaremos um link para você criar uma nova senha.</p>
+
+          <form id="recoverForm" novalidate>
+            <div class="field">
+              <label for="email">E-mail institucional <span class="req">*</span></label>
+              <input id="email" name="email" class="input-plain" type="email" placeholder="nome@edu.gov.br" autocomplete="username" required />
+              <div id="error-email" class="field-error-msg hidden">Informe um e-mail válido.</div>
+            </div>
+
+            <div class="wizard-foot">
+              <a class="link-back" href="/login">← Voltar para o Login</a>
+              <button type="submit" class="btn btn-primary" id="recoverBtn">Enviar link</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="recoverDone" class="hidden" role="status" style="text-align: center;">
+          <h2>Verifique seu e-mail</h2>
+          <p class="desc" style="margin-bottom: 32px;">Se o e-mail estiver cadastrado, você receberá um link para redefinir sua senha. O link vale por 30 minutos.</p>
+          <a class="btn btn-primary" href="/login">Voltar para o Login</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/main.js"></script>
+</body>
+</html>
