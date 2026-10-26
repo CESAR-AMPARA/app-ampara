@@ -258,6 +258,254 @@
     });
   }
 
+  /* -------------------- API autenticada -------------------- */
+  function authHeaders(headers) {
+    headers = headers || {};
+    var token = localStorage.getItem('token');
+    if (token) headers.Authorization = 'Bearer ' + token;
+    return headers;
+  }
+
+  function apiRequest(url, options) {
+    options = options || {};
+    options.headers = authHeaders(options.headers);
+    return fetch(url, options).then(function (res) {
+      if (res.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+      }
+      return res.json();
+    });
+  }
+
+  function jsonPost(url, payload) {
+    return apiRequest(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  /* -------------------- Abas de cadastro (turmas / estudantes) -------------------- */
+  var registrationTabs = document.querySelectorAll('.registration-container [role="tab"]');
+  registrationTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      registrationTabs.forEach(function (t) {
+        var selected = t === tab;
+        t.classList.toggle('active', selected);
+        t.setAttribute('aria-selected', selected ? 'true' : 'false');
+        document.getElementById(t.getAttribute('aria-controls')).classList.toggle('active', selected);
+      });
+    });
+  });
+
+  // Whitespace-only values pass the `required` check, so trim before validating.
+  function validateRequired(form) {
+    form.querySelectorAll('input[type="text"]').forEach(function (input) { input.value = input.value.trim(); });
+    if (form.checkValidity()) return true;
+    form.reportValidity();
+    return false;
+  }
+
+  function submitRegistration(form, url, payload, successMessage) {
+    var btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    jsonPost(url, payload)
+      .then(function (data) {
+        if (data.sucesso) {
+          toast(successMessage);
+          form.reset();
+        } else {
+          toast(data.mensagem || 'Não foi possível concluir o cadastro.');
+        }
+      })
+      .catch(function (err) {
+        if (err.message !== 'Unauthorized') toast('Erro ao conectar ao servidor.');
+      })
+      .then(function () { btn.disabled = false; });
+  }
+
+  /* -------------------- Cadastro de turma -------------------- */
+  var turmaForm = document.getElementById('form-cadastro-turma');
+  if (turmaForm) {
+    turmaForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!validateRequired(turmaForm)) return;
+      submitRegistration(turmaForm, '/api/turmas', {
+        nome: document.getElementById('nome-turma').value,
+        turno: document.getElementById('turno-turma').value
+      }, 'Turma cadastrada com sucesso!');
+    });
+  }
+
+  /* -------------------- Cadastro de estudante -------------------- */
+  var estudanteForm = document.getElementById('form-cadastro-estudante');
+  if (estudanteForm) {
+    var turmaSelect = document.getElementById('turma-estudante');
+
+    apiRequest('/api/turmas')
+      .then(function (data) {
+        var turmas = data.turmas || [];
+        if (!turmas.length) {
+          turmaSelect.innerHTML = '<option value="" selected disabled>Nenhuma turma cadastrada</option>';
+          toast('Aviso: Nenhuma turma cadastrada. Por favor, crie uma turma primeiro.');
+          setTimeout(function () { window.location.href = '/cadastro_turma'; }, 3000);
+          return;
+        }
+        turmaSelect.innerHTML = '<option value="" selected disabled>Selecione a turma...</option>';
+        turmas.forEach(function (turma) {
+          var opt = document.createElement('option');
+          opt.value = turma.id;
+          opt.textContent = turma.nome;
+          turmaSelect.appendChild(opt);
+        });
+      })
+      .catch(function (err) {
+        if (err.message !== 'Unauthorized') {
+          turmaSelect.innerHTML = '<option value="" selected disabled>Erro ao carregar turmas</option>';
+        }
+      });
+
+    estudanteForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!validateRequired(estudanteForm)) return;
+      submitRegistration(estudanteForm, '/api/estudantes', {
+        nome: document.getElementById('nome-estudante').value,
+        matricula: document.getElementById('matricula-estudante').value,
+        turma_id: Number(turmaSelect.value)
+      }, 'Estudante cadastrado com sucesso!');
+    });
+  }
+
+  /* -------------------- Importação em lote (planilhas) -------------------- */
+  var MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+  var IMPORT_LABELS = {
+    turmas: ['turma cadastrada', 'turmas cadastradas'],
+    estudantes: ['estudante cadastrado', 'estudantes cadastrados']
+  };
+
+  document.querySelectorAll('.drop-zone[data-import-url]').forEach(initSpreadsheetImport);
+
+  function initSpreadsheetImport(dropZone) {
+    var card = dropZone.closest('.form-card');
+    var fileInput = dropZone.querySelector('input[type="file"]');
+    var fileInfo = card.querySelector('.file-info');
+    var fileName = fileInfo.querySelector('span');
+    var progress = card.querySelector('.progress-bar-container');
+    var progressFill = card.querySelector('.progress-bar-fill');
+    var summary = card.querySelector('.import-summary');
+    var submitBtn = card.querySelector('button.btn-primary');
+    var labels = IMPORT_LABELS[dropZone.getAttribute('data-import-kind')];
+    var selectedFile = null;
+
+    dropZone.addEventListener('click', function (e) {
+      if (e.target !== fileInput) fileInput.click();
+    });
+    dropZone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+    });
+    dropZone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files.length) selectFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files.length) selectFile(fileInput.files[0]);
+    });
+
+    function selectFile(file) {
+      summary.classList.add('hidden');
+      resetProgress();
+      var error = null;
+      if (!/\.(csv|xlsx)$/i.test(file.name)) {
+        error = 'Erro: Formato de arquivo não suportado. Use apenas planilhas CSV ou Excel.';
+      } else if (file.size > MAX_IMPORT_BYTES) {
+        error = 'Erro: O arquivo excede o tamanho máximo de 5MB.';
+      }
+      if (error) {
+        toast(error);
+        clearSelection();
+        return;
+      }
+      selectedFile = file;
+      fileName.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+      fileInfo.style.display = 'block';
+      submitBtn.disabled = false;
+    }
+
+    function clearSelection() {
+      selectedFile = null;
+      fileInput.value = '';
+      fileInfo.style.display = 'none';
+      submitBtn.disabled = true;
+    }
+
+    function resetProgress() {
+      progress.style.display = 'none';
+      progressFill.style.transition = 'none';
+      progressFill.style.width = '0%';
+    }
+
+    submitBtn.addEventListener('click', function () {
+      if (!selectedFile) return;
+      var body = new FormData();
+      body.append('file', selectedFile);
+      submitBtn.disabled = true;
+
+      // The backend reports no upload progress: ease towards 90% while waiting, finish on response.
+      progress.style.display = 'block';
+      void progressFill.offsetWidth;
+      progressFill.style.transition = 'width 1.5s ease-out';
+      progressFill.style.width = '90%';
+
+      apiRequest(dropZone.getAttribute('data-import-url'), { method: 'POST', body: body })
+        .then(function (data) {
+          if (!data.sucesso) {
+            toast(data.mensagem || 'Não foi possível importar a planilha.');
+            resetProgress();
+            submitBtn.disabled = false;
+            return;
+          }
+          progressFill.style.transition = 'width .3s ease-out';
+          progressFill.style.width = '100%';
+          renderSummary(data.importados || 0, data.erros || []);
+          clearSelection();
+        })
+        .catch(function (err) {
+          if (err.message === 'Unauthorized') return;
+          toast('Erro ao conectar ao servidor.');
+          resetProgress();
+          submitBtn.disabled = false;
+        });
+    });
+
+    function renderSummary(importados, erros) {
+      var text = 'Importação concluída: ' + importados + ' ' + labels[importados === 1 ? 0 : 1] + ' com sucesso.';
+      if (erros.length) {
+        text += ' ' + erros.length + (erros.length === 1 ? ' registro ignorado.' : ' registros ignorados.');
+      }
+      summary.innerHTML = '';
+      var headline = document.createElement('p');
+      headline.textContent = text;
+      summary.appendChild(headline);
+      if (erros.length) {
+        var list = document.createElement('ul');
+        erros.forEach(function (erro) {
+          var item = document.createElement('li');
+          item.textContent = 'Linha ' + erro.linha + ': ' + erro.motivo;
+          list.appendChild(item);
+        });
+        summary.appendChild(list);
+      }
+      summary.classList.remove('hidden');
+    }
+  }
+
   /* -------------------- Wizard de cadastro -------------------- */
   var wizard = document.getElementById('wizard');
   if (wizard) initWizard(wizard);
