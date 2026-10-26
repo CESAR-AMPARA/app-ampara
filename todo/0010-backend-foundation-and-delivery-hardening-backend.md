@@ -5,7 +5,7 @@
 *This specification is backend-only and has no frontend counterpart. It ships first: [todo/0002-multi-tenant-auth-registration-backend.md](0002-multi-tenant-auth-registration-backend.md) and every later backend spec build on the composition root and the credential resolution defined here.*
 
 ## Problem
-The backend on `main` cannot be handed to a school. `/api/login` first reads a `credentials.json` from the repository and, if the e-mail is listed there and the plaintext password matches, answers `"sucesso": true` with whatever profile the file names, without touching the database. That file is tracked in Git and copied into the image by `COPY . .` in the `Dockerfile`, so anyone with read access to the repository can log in as any of its profiles on any server that runs that image. `database/app.db` is tracked too, so whatever a developer registered locally ends up in Git.
+The backend on `main` cannot be handed to a school. Until 2026-10-26, `/api/login` accepted any e-mail and plaintext password listed in a committed `credentials.json`; that bypass, the file, and the tracked `database/app.db` are gone from the code and from Git history, but the passwords were public while the repository was, so any of them reused elsewhere must be changed.
 
 The rest of the backend contradicts the rules the team wrote down. `src/app.py` creates the Flask app, binds the database, and runs `db.create_all()` at import time, against [ADR-0001](../adr/0001-nothing-resolves-at-import-time.md). `src/config.py` reads `SECRET_KEY` and `DATABASE_URL` from environment variables and falls back to a hardcoded secret key, against [ADR-0003](../adr/0003-secrets-handling-credentials.md). `GET /api/usuarios` lists every account with no authentication, and `GET /api/aprovar/<id>` activates any account with no authentication, through a `GET` that a crawler or a prefetching browser can trigger. `/api/cadastro` prints the database URL to the server log.
 
@@ -44,8 +44,8 @@ Routes move out of `src/app.py` into blueprints under `src/routes/` (`pages.py` 
 
 The factory refuses to start when the file is missing or a key is absent, with the message naming the key but never its value. A hardcoded fallback secret is exactly what made the current `Config` unsafe, so there is no fallback; the cost is that a fresh clone needs the file before `./dev.sh serve` works, which `./dev.sh seed` mitigates by writing a development file with random keys and SQLite URLs under `~/.config/ampara/` when none exists.
 
-### Removing the repository credential login and the legacy routes
-The `credentials.json` lookup in `/api/login` is deleted; [0002](0002-multi-tenant-auth-registration-backend.md) replaces the login handler entirely. `credentials.json` and `database/app.db` are removed from the index (`git rm --cached`) and added to `.gitignore` together with `*.db` and `.env`. Removing them from the tip does not remove them from history, so the passwords in that file must be considered public: any of them reused anywhere else must be changed. Rewriting history was the alternative; I rejected it as the default because it breaks every open branch and fork of a repository that has had public pull requests, and the exposure is already done. The team decides whether to rewrite in addition, see _Further Notes_.
+### Removing the legacy routes
+[0002](0002-multi-tenant-auth-registration-backend.md) replaces the login handler entirely. `.gitignore` already lists `credentials.json` and `*.db`; this spec adds `.env`, and the credentials adapter below never looks inside the repository, so a stray file there is ignored rather than read.
 
 `GET /api/aprovar/<id>` is deleted; approval is the `POST /api/gestao/usuarios/<id>/aprovar` of `0002`. `GET /api/usuarios` keeps its path because [0006](0006-referral-queue-management-backend.md) extends it, and [0011](0011-access-management-backend.md) restricts it to `gestor_escolar`. Until `0011` lands, this spec trims the route's response to `id`, `nome`, `perfil`, `cargo`, and `status`, the fields the triage dropdown of `0006` needs, so e-mails stop leaking in the meantime; the two specs are meant to reach production in the same release. The `print(db_url)` call and `load_dotenv()` are deleted.
 
@@ -69,7 +69,7 @@ The `build-image` job of `.github/workflows/ci.yml` starts the container and pol
 ## Testing Decisions
 Every test builds the app through `create_app` with an in-memory `FakeCredentials` double and SQLite in memory; no test reads a file from disk outside `test/fixtures/`.
 
-- `backend/test/test_app.py`: the factory starts with injected credentials and refuses to start without them; page routes render; `GET /api/aprovar/1` returns 404; the `credentials.json` login path no longer exists (a request with an e-mail listed only in a fixture credentials file is refused); every response carries the security headers and API responses carry `Cache-Control: no-store`. The current `test_credentials_login` and `test_api_usuarios_and_aprovar` cases are deleted with the behaviour they covered.
+- `backend/test/test_app.py`: the factory starts with injected credentials and refuses to start without them; page routes render; `GET /api/aprovar/1` returns 404; every response carries the security headers and API responses carry `Cache-Control: no-store`. The current `test_api_usuarios_and_aprovar` case is deleted with the behaviour they covered.
 - `backend/test/test_adapters_credentials_file.py`: path resolution order, typed reads, `MissingCredentialError` naming the key without leaking values.
 - `backend/test/test_routes_pages.py`: one test per page route, moved from `test_app.py`.
 - `backend/test/test_models.py`: kept, updated for the model changes.
@@ -84,6 +84,6 @@ The smoke test is verified once by hand: run the image without the mount and con
 - Database migrations for existing data; there is no production data worth migrating today.
 
 ## Further Notes
-Whether to purge `credentials.json` from Git history is a team decision with a real cost either way: a purge requires every collaborator to re-clone and invalidates open pull requests, while not purging leaves the passwords readable in history forever. Rotating the passwords is required in both cases.
+The purge of `credentials.json` from history covers every branch, but GitHub keeps the `refs/pull/*/head` refs of closed pull requests, which still reach the old commits; removing those, and the cached views of old commits, takes a request to GitHub Support. Every collaborator must re-clone, since a push from an old clone would bring the file back.
 
 The `nginx.conf` at the repository root is not used by the `Dockerfile`, which serves everything through Gunicorn. It should either be deleted or wired in as a reverse proxy terminating TLS; until someone decides, it misleads readers about how production serves the pages.
