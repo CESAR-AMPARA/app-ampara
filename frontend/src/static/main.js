@@ -193,6 +193,7 @@
       e.preventDefault();
       var email = recoverEmail.value.trim();
       if (!email || !recoverEmail.checkValidity()) { recoverError.classList.remove('hidden'); return; }
+      recoverError.classList.add('hidden');
 
       recoverBtn.disabled = true;
       fetch('/api/recuperar-senha', {
