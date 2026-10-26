@@ -47,14 +47,8 @@ function login(window) {
   return settle();
 }
 
-test('active login stores the JWT and redirects to the profile dashboard', async () => {
-  const profiles = [
-    { perfil: 'gestor_escolar', expected: '/dashboard_gestao' },
-    { perfil: 'docente', expected: '/dashboard' },
-    { perfil: 'equipe_multidisciplinar', expected: '/dashboard_saude' }
-  ];
-
-  for (const { perfil, expected } of profiles) {
+test('active login stores the JWT and the profile, then opens the dashboard', async () => {
+  for (const perfil of ['gestor_escolar', 'docente', 'equipe_multidisciplinar']) {
     const usuario = { id: 12, nome: 'Maria Silva', perfil: perfil };
     const window = setupDOM([{
       status: 200,
@@ -70,7 +64,7 @@ test('active login stores the JWT and redirects to the profile dashboard', async
     assert.strictEqual(window.localStorage.getItem('token'), 'jwt_' + perfil);
     assert.deepStrictEqual(JSON.parse(window.localStorage.getItem('usuario')), usuario);
     assert.deepStrictEqual(JSON.parse(window.sessionStorage.getItem('usuarioLogado')), usuario);
-    assert.strictEqual(window.__mock_location_href, expected);
+    assert.strictEqual(window.__mock_location_href, '/dashboard');
   }
 });
 

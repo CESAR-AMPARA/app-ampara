@@ -96,6 +96,54 @@
       background-color: var(--sage-badge);
       color: var(--sage-badge-tx);
     }
+    /* Fila de Encaminhamentos: prioridade e status */
+    .status-badge.priority-alta { background-color: #fce8e6; color: #9b2c1f; }
+    .status-badge.priority-media { background-color: #fcf1d4; color: #9a5b10; }
+    .status-badge.priority-baixa { background-color: var(--sage-badge); color: var(--sage-badge-tx); }
+    .status-badge.status-triagem { background-color: #dccfe1; color: #4a3a55; }
+    .status-badge.status-atendimento { background-color: #dbe7f0; color: var(--navy-dark); }
+    .status-badge.status-concluido { background-color: var(--sage-badge); color: var(--sage-badge-tx); }
+    .status-badge.status-arquivado { background-color: var(--border); color: var(--muted); }
+    .referral-filters {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .referral-filters .field { margin: 0; min-width: 200px; }
+    .referral-meta {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .triage-motivo {
+      margin: 0;
+      padding: 14px 16px;
+      background: var(--card-inset);
+      border-left: 4px solid var(--navy);
+      border-radius: var(--radius-sm);
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+    .assigned-referrals-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .assigned-referral-card {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      background: var(--card);
+    }
+    .assigned-referral-card h3 { margin: 0 0 4px; font-size: 1.1rem; }
+    .assigned-referral-card .badges { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+    .assigned-referral-card .motivo { margin: 0 0 12px; color: var(--ink-soft); font-size: 0.95rem; }
+    .referral-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+    .referral-actions textarea { width: 100%; min-height: 80px; padding: 12px; resize: vertical; font-family: inherit; }
+    .referral-actions .row { display: flex; gap: 10px; flex-wrap: wrap; }
     .empty-state {
       text-align: center;
       padding: 48px 24px;
@@ -303,14 +351,17 @@
     <div class="form-card" id="rbac-switcher-box" style="padding: 16px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--card-inset); border-color: var(--border-strong);">
       <div>
         <strong style="display: block; font-size: 0.95rem; color: var(--navy);">Seletor de Perfil Simulado (RBAC)</strong>
-        <span style="font-size: 0.82rem; color: var(--muted);">Alterne entre os perfis para testar as permissões de acesso do Gestor ou Professor.</span>
+        <span style="font-size: 0.82rem; color: var(--muted);">Alterne entre os perfis para testar as permissões de acesso do Gestor, Professor ou Equipe Multidisciplinar.</span>
       </div>
-      <div style="display: flex; gap: 8px;">
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         <button type="button" class="btn btn-primary" id="btn-rbac-gestor" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
           Gestor Escolar
         </button>
         <button type="button" class="btn btn-outline" id="btn-rbac-docente" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
           Docente (Professor)
+        </button>
+        <button type="button" class="btn btn-outline" id="btn-rbac-saude" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
+          Equipe Multidisciplinar
         </button>
       </div>
     </div>
@@ -329,7 +380,7 @@
     <div id="panel-gestor">
       
       <!-- Abas de Navegação Interna da Coordenação -->
-      <div class="tabs-nav" role="tablist" aria-label="Abas da Coordenação" style="margin-bottom: 24px;">
+      <div class="tabs-nav" role="tablist" aria-label="Abas da Coordenação" style="margin-bottom: 24px; overflow-x: auto;">
         <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="gestor-tab-credenciamento" id="btn-gestor-tab-credenciamento" style="font-size: 0.95rem; padding: 10px 16px;">
           👥 Credenciamento &amp; Equipe
         </button>
@@ -341,6 +392,9 @@
         </button>
         <button class="tab-btn" role="tab" aria-selected="false" aria-controls="gestor-tab-capacitacao" id="btn-gestor-tab-capacitacao" style="font-size: 0.95rem; padding: 10px 16px;">
           🎓 Capacitação Docente
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="gestor-tab-encaminhamentos" id="btn-gestor-tab-encaminhamentos" style="font-size: 0.95rem; padding: 10px 16px;">
+          📋 Fila de Encaminhamentos
         </button>
       </div>
 
@@ -578,6 +632,59 @@
         </div>
       </div>
 
+      <!-- ABA 5: FILA DE ENCAMINHAMENTOS -->
+      <div class="gestor-tab-panel" id="gestor-tab-encaminhamentos" style="display: none;">
+        <div class="users-table-card">
+          <h2>Fila de Encaminhamentos</h2>
+          <p class="description">Revise os estudantes encaminhados para apoio psicossocial, defina a prioridade e designe um profissional da equipe multidisciplinar.</p>
+
+          <div class="referral-filters">
+            <div class="field">
+              <label for="referral-filter-status">Status</label>
+              <select id="referral-filter-status" class="input-plain">
+                <option value="">Todos</option>
+                <option value="Aguardando Triagem">Aguardando Triagem</option>
+                <option value="Em Atendimento">Em Atendimento</option>
+                <option value="Concluído">Concluído</option>
+                <option value="Arquivado">Arquivado</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="referral-filter-prioridade">Prioridade</label>
+              <select id="referral-filter-prioridade" class="input-plain">
+                <option value="">Todas</option>
+                <option value="Alta">Alta</option>
+                <option value="Média">Média</option>
+                <option value="Baixa">Baixa</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Estudante</th>
+                  <th>Data de Envio</th>
+                  <th>Solicitante</th>
+                  <th>Prioridade</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="referral-queue-tbody">
+                <tr>
+                  <td colspan="6" class="empty-state">
+                    <div class="icon">🔄</div>
+                    <div>Carregando fila de encaminhamentos...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- PAINEL DOCENTE / PROFESSOR (Gestão de Comportamento) -->
@@ -696,6 +803,20 @@
 
             </div>
             </div>
+
+    <!-- PAINEL EQUIPE MULTIDISCIPLINAR (Casos Designados) -->
+    <div id="panel-saude" style="display: none;">
+      <div class="users-table-card">
+        <h2>Meus Casos Designados</h2>
+        <p class="description">Estudantes encaminhados pela coordenação para o seu acompanhamento. Atualize o status conforme o atendimento avança.</p>
+        <div id="assigned-referrals-list" class="assigned-referrals-list">
+          <div class="empty-state">
+            <div class="icon">🔄</div>
+            <div>Carregando casos designados...</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
             <!-- PAINEL BIBLIOTECA (Guias Práticos) (Track 01) -->
             <div id="panel-biblioteca" style="display: none;">
@@ -912,37 +1033,44 @@
         ]
       };
 
-      let currentRole = "gestor"; // "gestor" ou "docente"
+      let currentRole = "gestor"; // "gestor", "docente" ou "saude"
       let currentSelectedClass = "all"; // "all" ou id da turma ("1a", etc)
       let activeStudentForModal = null;
+
+      const ROLE_PANELS = {
+        gestor: { panel: 'panel-gestor', title: 'Painel de Credenciamento' },
+        docente: { panel: 'panel-docente', title: 'Acompanhamento Comportamental' },
+        saude: { panel: 'panel-saude', title: 'Casos Designados' }
+      };
+
+      function showRolePanel(role) {
+        currentRole = role;
+        // While the library tab is open the work panels stay hidden; "Painel de Trabalho" shows the role's panel again.
+        const libraryOpen = document.getElementById('tab-btn-biblioteca').classList.contains('active');
+        Object.keys(ROLE_PANELS).forEach(r => {
+          document.getElementById(ROLE_PANELS[r].panel).style.display = (r === role && !libraryOpen) ? 'block' : 'none';
+          const btn = document.getElementById('btn-rbac-' + r);
+          if (btn) btn.className = r === role ? 'btn btn-primary' : 'btn btn-outline';
+        });
+        document.getElementById('dashboard-title').textContent = ROLE_PANELS[role].title;
+        if (role === 'saude') loadAssignedReferrals();
+      }
 
       function inicializarPainelProfessor() {
         const btnRbacGestor = document.getElementById('btn-rbac-gestor');
         const btnRbacDocente = document.getElementById('btn-rbac-docente');
-        const panelGestor = document.getElementById('panel-gestor');
-        const panelDocente = document.getElementById('panel-docente');
-        const dashboardTitle = document.getElementById('dashboard-title');
+        const btnRbacSaude = document.getElementById('btn-rbac-saude');
 
-        if (!btnRbacGestor || !btnRbacDocente) return;
+        if (!btnRbacGestor || !btnRbacDocente || !btnRbacSaude) return;
 
-        btnRbacGestor.addEventListener('click', () => {
-          currentRole = "gestor";
-          btnRbacGestor.className = "btn btn-primary";
-          btnRbacDocente.className = "btn btn-outline";
-          panelGestor.style.display = "block";
-          panelDocente.style.display = "none";
-          dashboardTitle.textContent = "Painel de Credenciamento";
-        });
+        btnRbacGestor.addEventListener('click', () => showRolePanel('gestor'));
 
         btnRbacDocente.addEventListener('click', () => {
-          currentRole = "docente";
-          btnRbacGestor.className = "btn btn-outline";
-          btnRbacDocente.className = "btn btn-primary";
-          panelGestor.style.display = "none";
-          panelDocente.style.display = "block";
-          dashboardTitle.textContent = "Acompanhamento Comportamental";
+          showRolePanel('docente');
           renderizarTurmasDocente();
         });
+
+        btnRbacSaude.addEventListener('click', () => showRolePanel('saude'));
 
         // Escutar cliques em cards de turma
         document.querySelectorAll('.class-select-card').forEach(card => {
@@ -1631,15 +1759,17 @@
         const tabBusca = document.getElementById('btn-gestor-tab-busca');
         const tabOcorrencias = document.getElementById('btn-gestor-tab-ocorrencias');
         const tabCapacitacao = document.getElementById('btn-gestor-tab-capacitacao');
+        const tabEncaminhamentos = document.getElementById('btn-gestor-tab-encaminhamentos');
 
         const panelCredenciamento = document.getElementById('gestor-tab-credenciamento');
         const panelBusca = document.getElementById('gestor-tab-busca');
         const panelOcorrencias = document.getElementById('gestor-tab-ocorrencias');
         const panelCapacitacao = document.getElementById('gestor-tab-capacitacao');
+        const panelEncaminhamentos = document.getElementById('gestor-tab-encaminhamentos');
 
-        if (tabCredenciamento && tabBusca && tabOcorrencias && tabCapacitacao) {
-          const gestorTabs = [tabCredenciamento, tabBusca, tabOcorrencias, tabCapacitacao];
-          const gestorPanels = [panelCredenciamento, panelBusca, panelOcorrencias, panelCapacitacao];
+        if (tabCredenciamento && tabBusca && tabOcorrencias && tabCapacitacao && tabEncaminhamentos) {
+          const gestorTabs = [tabCredenciamento, tabBusca, tabOcorrencias, tabCapacitacao, tabEncaminhamentos];
+          const gestorPanels = [panelCredenciamento, panelBusca, panelOcorrencias, panelCapacitacao, panelEncaminhamentos];
 
           gestorTabs.forEach(tab => {
             tab.addEventListener('click', () => {
@@ -2251,6 +2381,7 @@
         const tabBtnBiblioteca = document.getElementById('tab-btn-biblioteca');
         const panelGestor = document.getElementById('panel-gestor');
         const panelDocente = document.getElementById('panel-docente');
+        const panelSaude = document.getElementById('panel-saude');
         const panelBiblioteca = document.getElementById('panel-biblioteca');
 
         const searchInput = document.getElementById('search-library-input');
@@ -2266,13 +2397,7 @@
           tabBtnBiblioteca.setAttribute('aria-selected', 'false');
 
           panelBiblioteca.style.display = "none";
-          if (currentRole === "gestor") {
-            panelGestor.style.display = "block";
-            panelDocente.style.display = "none";
-          } else {
-            panelGestor.style.display = "none";
-            panelDocente.style.display = "block";
-          }
+          showRolePanel(currentRole);
         });
 
         // Alternar para a Biblioteca de Apoio
@@ -2284,29 +2409,11 @@
 
           panelGestor.style.display = "none";
           panelDocente.style.display = "none";
+          panelSaude.style.display = "none";
           panelBiblioteca.style.display = "block";
 
           renderizarBiblioteca();
         });
-
-        // Registrar controle de mudança de RBAC para manter as abas consistentes
-        const btnRbacGestor = document.getElementById('btn-rbac-gestor');
-        const btnRbacDocente = document.getElementById('btn-rbac-docente');
-        
-        if (btnRbacGestor && btnRbacDocente) {
-          btnRbacGestor.addEventListener('click', () => {
-            if (tabBtnBiblioteca.classList.contains('active')) {
-              panelGestor.style.display = "none";
-              panelDocente.style.display = "none";
-            }
-          });
-          btnRbacDocente.addEventListener('click', () => {
-            if (tabBtnBiblioteca.classList.contains('active')) {
-              panelGestor.style.display = "none";
-              panelDocente.style.display = "none";
-            }
-          });
-        }
 
         // Filtro por palavra-chave na busca
         if (searchInput) {
@@ -2467,11 +2574,304 @@
         }
       }
 
+      // ==========================================================
+      // FILA DE ENCAMINHAMENTOS (Coordenação e Equipe Multidisciplinar)
+      // ==========================================================
+      const PRIORITY_BADGE = { 'Alta': 'priority-alta', 'Média': 'priority-media', 'Baixa': 'priority-baixa' };
+      const STATUS_BADGE = {
+        'Aguardando Triagem': 'status-triagem',
+        'Em Atendimento': 'status-atendimento',
+        'Concluído': 'status-concluido',
+        'Arquivado': 'status-arquivado'
+      };
+
+      let referralQueue = [];
+      let professionalsLoaded = false;
+      let referralInTriage = null;
+      let triageOpener = null;
+
+      function badge(map, value) {
+        return `<span class="status-badge ${map[value] || ''}">${escapeHtml(value)}</span>`;
+      }
+
+      // Dates come in UTC; the school day that matters is Brasília's.
+      function formatReferralDate(iso) {
+        return new Date(iso).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+      }
+
+      function truncate(text, max) {
+        return text.length > max ? text.slice(0, max - 1).trimEnd() + '…' : text;
+      }
+
+      function jsonRequest(method, url, payload) {
+        return apiRequest(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      function initReferralQueue() {
+        const tab = document.getElementById('btn-gestor-tab-encaminhamentos');
+        if (!tab) return;
+        tab.addEventListener('click', loadReferralQueue);
+        document.getElementById('referral-filter-status').addEventListener('change', loadReferralQueue);
+        document.getElementById('referral-filter-prioridade').addEventListener('change', loadReferralQueue);
+
+        document.getElementById('referral-queue-tbody').addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-referral-id]');
+          if (btn) openTriageModal(Number(btn.getAttribute('data-referral-id')), btn);
+        });
+
+        const modal = document.getElementById('referral-triage-modal');
+        document.getElementById('btn-close-triage-modal').addEventListener('click', closeTriageModal);
+        document.getElementById('btn-cancel-triage').addEventListener('click', closeTriageModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeTriageModal(); });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modal.style.display !== 'none') closeTriageModal();
+        });
+        document.getElementById('form-referral-triage').addEventListener('submit', saveTriage);
+
+        document.getElementById('assigned-referrals-list').addEventListener('click', handleAssignedReferralAction);
+      }
+
+      function renderQueueMessage(icon, message) {
+        document.getElementById('referral-queue-tbody').innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <div class="icon">${icon}</div>
+              <div>${message}</div>
+            </td>
+          </tr>
+        `;
+      }
+
+      function loadReferralQueue() {
+        const params = new URLSearchParams();
+        const status = document.getElementById('referral-filter-status').value;
+        const prioridade = document.getElementById('referral-filter-prioridade').value;
+        if (status) params.set('status', status);
+        if (prioridade) params.set('prioridade', prioridade);
+        const query = params.toString();
+
+        return apiRequest('/api/gestao/encaminhamentos' + (query ? '?' + query : ''))
+          .then(data => {
+            referralQueue = data.encaminhamentos || [];
+            renderReferralQueue();
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') renderQueueMessage('⚠️', 'Erro ao carregar a fila de encaminhamentos.');
+          });
+      }
+
+      function renderReferralQueue() {
+        if (!referralQueue.length) {
+          renderQueueMessage('📭', 'Nenhum encaminhamento encontrado para os filtros selecionados.');
+          return;
+        }
+        document.getElementById('referral-queue-tbody').innerHTML = referralQueue.map(item => {
+          const notes = item.observacoes_coordenacao
+            ? `<span class="referral-meta" title="${escapeHtml(item.observacoes_coordenacao)}">📝 ${escapeHtml(truncate(item.observacoes_coordenacao, 60))}</span>`
+            : '';
+          const assigned = item.designado
+            ? `<span class="referral-meta">Designado: ${escapeHtml(item.designado.nome)}</span>`
+            : '';
+          return `
+            <tr>
+              <td><strong>${escapeHtml(item.estudante.nome)}</strong> (${escapeHtml(item.estudante.turma)})${notes}</td>
+              <td>${formatReferralDate(item.created_at)}</td>
+              <td>${escapeHtml(item.solicitante.nome)}</td>
+              <td>${badge(PRIORITY_BADGE, item.prioridade)}</td>
+              <td>${badge(STATUS_BADGE, item.status)}${assigned}</td>
+              <td><button type="button" class="btn btn-outline" data-referral-id="${item.id}" style="padding: 6px 14px; font-size: 0.85rem; font-weight: 700;">Avaliar</button></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function loadProfessionals() {
+        if (professionalsLoaded) return Promise.resolve();
+        const select = document.getElementById('triage-designado');
+        return apiRequest('/api/usuarios?perfil=equipe_multidisciplinar')
+          .then(usuarios => {
+            select.innerHTML = '<option value="" disabled selected>Selecione o profissional...</option>';
+            usuarios.forEach(u => {
+              const opt = document.createElement('option');
+              opt.value = u.id;
+              opt.textContent = u.cargo ? `${u.nome} — ${u.cargo}` : u.nome;
+              select.appendChild(opt);
+            });
+            professionalsLoaded = true;
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') {
+              select.innerHTML = '<option value="" disabled selected>Erro ao carregar profissionais</option>';
+            }
+          });
+      }
+
+      function openTriageModal(id, opener) {
+        referralInTriage = referralQueue.find(item => item.id === id);
+        if (!referralInTriage) return;
+        triageOpener = opener;
+        const item = referralInTriage;
+
+        document.getElementById('triage-student-name').textContent = item.estudante.nome;
+        document.getElementById('triage-student-details').textContent =
+          `${item.estudante.turma} · Matrícula ${item.estudante.matricula} · Enviado por ${item.solicitante.nome} em ${formatReferralDate(item.created_at)}`;
+        document.getElementById('triage-motivo').textContent = item.motivo;
+        document.getElementById('triage-prioridade').value = item.prioridade;
+        document.getElementById('triage-observacoes').value = item.observacoes_coordenacao || '';
+
+        const modal = document.getElementById('referral-triage-modal');
+        modal.style.display = 'flex';
+        loadProfessionals().then(() => {
+          document.getElementById('triage-designado').value = item.designado ? String(item.designado.id) : '';
+          document.getElementById('triage-prioridade').focus();
+        });
+      }
+
+      function closeTriageModal() {
+        document.getElementById('referral-triage-modal').style.display = 'none';
+        referralInTriage = null;
+        if (triageOpener && triageOpener.isConnected) triageOpener.focus();
+        triageOpener = null;
+      }
+
+      function saveTriage(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+
+        const saveBtn = document.getElementById('btn-save-triage');
+        const observacoes = document.getElementById('triage-observacoes').value.trim();
+        const id = referralInTriage.id;
+        saveBtn.disabled = true;
+        jsonRequest('PUT', `/api/gestao/encaminhamentos/${id}`, {
+          prioridade: document.getElementById('triage-prioridade').value,
+          designado_id: Number(document.getElementById('triage-designado').value),
+          observacoes_coordenacao: observacoes || null
+        })
+          .then(data => {
+            if (!data.sucesso) {
+              toast(data.mensagem || 'Não foi possível salvar o encaminhamento.');
+              return;
+            }
+            closeTriageModal();
+            toast('Encaminhamento designado com sucesso!');
+            // Reloading re-renders the table, so focus the new "Avaliar" button of the same referral.
+            return loadReferralQueue().then(() => {
+              const btn = document.querySelector(`#referral-queue-tbody [data-referral-id="${id}"]`);
+              if (btn) btn.focus();
+            });
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') toast('Erro ao conectar ao servidor.');
+          })
+          .then(() => { saveBtn.disabled = false; });
+      }
+
+      function renderAssignedMessage(icon, message) {
+        document.getElementById('assigned-referrals-list').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">${icon}</div>
+            <div>${message}</div>
+          </div>
+        `;
+      }
+
+      function loadAssignedReferrals() {
+        return apiRequest('/api/multidisciplinar/encaminhamentos')
+          .then(data => renderAssignedReferrals(data.encaminhamentos || []))
+          .catch(err => {
+            if (err.message !== 'Unauthorized') renderAssignedMessage('⚠️', 'Erro ao carregar os casos designados.');
+          });
+      }
+
+      function assignedReferralActions(item) {
+        if (item.status === 'Aguardando Triagem') {
+          return `<button type="button" class="btn btn-primary" data-action="start" style="padding: 8px 16px; font-weight: 700;">Iniciar Atendimento</button>`;
+        }
+        if (item.status === 'Em Atendimento') {
+          return `<button type="button" class="btn btn-primary" data-action="conclude" style="padding: 8px 16px; font-weight: 700;">Concluir Caso</button>`;
+        }
+        return '';
+      }
+
+      function renderAssignedReferrals(items) {
+        if (!items.length) {
+          renderAssignedMessage('📭', 'Nenhum caso designado a você no momento.');
+          return;
+        }
+        document.getElementById('assigned-referrals-list').innerHTML = items.map(item => `
+          <article class="assigned-referral-card" data-referral-id="${item.id}">
+            <h3>${escapeHtml(item.estudante.nome)} (${escapeHtml(item.estudante.turma)})</h3>
+            <span class="referral-meta">Encaminhado em ${formatReferralDate(item.created_at)}</span>
+            <div class="badges">${badge(PRIORITY_BADGE, item.prioridade)} ${badge(STATUS_BADGE, item.status)}</div>
+            <p class="motivo">${escapeHtml(item.motivo)}</p>
+            <div class="referral-actions">${assignedReferralActions(item)}</div>
+          </article>
+        `).join('');
+      }
+
+      function updateReferralStatus(id, payload) {
+        return jsonRequest('PUT', `/api/multidisciplinar/encaminhamentos/${id}/status`, payload)
+          .then(data => {
+            if (!data.sucesso) {
+              toast(data.mensagem || 'Não foi possível atualizar o status.');
+              return;
+            }
+            toast(data.mensagem || 'Status atualizado.');
+            return loadAssignedReferrals();
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') toast('Erro ao conectar ao servidor.');
+          });
+      }
+
+      function handleAssignedReferralAction(e) {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const card = btn.closest('[data-referral-id]');
+        const id = Number(card.getAttribute('data-referral-id'));
+        const actions = card.querySelector('.referral-actions');
+        const action = btn.getAttribute('data-action');
+
+        if (action === 'start') {
+          btn.disabled = true;
+          updateReferralStatus(id, { status: 'Em Atendimento' }).then(() => { btn.disabled = false; });
+        } else if (action === 'conclude') {
+          actions.innerHTML = `
+            <label for="closing-summary-${id}" style="font-weight: 700; font-size: 0.9rem;">Resumo do encerramento <span class="req">*</span></label>
+            <textarea id="closing-summary-${id}" class="input-plain" placeholder="Ex.: Acompanhamento concluído; família orientada a procurar a UBS."></textarea>
+            <span class="referral-meta">Registre apenas o desfecho administrativo. Não inclua informações clínicas.</span>
+            <div class="row">
+              <button type="button" class="btn btn-outline" data-action="cancel-conclude" style="padding: 8px 16px; font-weight: 700;">Cancelar</button>
+              <button type="button" class="btn btn-primary" data-action="confirm-conclude" style="padding: 8px 16px; font-weight: 700;">Confirmar Conclusão</button>
+            </div>
+          `;
+          document.getElementById(`closing-summary-${id}`).focus();
+        } else if (action === 'cancel-conclude') {
+          actions.innerHTML = assignedReferralActions({ status: 'Em Atendimento' });
+        } else if (action === 'confirm-conclude') {
+          const summary = document.getElementById(`closing-summary-${id}`);
+          if (!summary.value.trim()) {
+            toast('Informe um resumo do encerramento do caso.');
+            summary.focus();
+            return;
+          }
+          btn.disabled = true;
+          updateReferralStatus(id, { status: 'Concluído', resumo_encerramento: summary.value.trim() })
+            .then(() => { btn.disabled = false; });
+        }
+      }
+
       // Iniciar
       document.addEventListener('DOMContentLoaded', () => {
         inicializarNavegacaoGlobalEBiblioteca();
         inicializarCompartilhamentoDeMateriais();
         inicializarFiltrosLinhaTempo();
+        initReferralQueue();
         const usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado"));
         const switcherBox = document.getElementById('rbac-switcher-box');
         const btnSair = document.querySelector('.site-header .header-actions a[href="/"]');
@@ -2497,6 +2897,9 @@
             currentRole = "docente";
             inicializarPainelProfessor();
             renderizarTurmasDocente();
+          } else if (usuarioLogado.perfil === "equipe_multidisciplinar") {
+            if (switcherBox) switcherBox.style.display = "none";
+            showRolePanel('saude');
           } else {
             // Se for coordenador (gestao)
             if (switcherBox) switcherBox.style.display = "flex";
@@ -2710,6 +3113,51 @@
         <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;">
           Registrar Ocorrência
         </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Triagem de Encaminhamento -->
+  <div id="referral-triage-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="triage-student-name" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
+    <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 600px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
+
+      <button type="button" id="btn-close-triage-modal" aria-label="Fechar" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
+
+      <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Gerenciar Encaminhamento</span>
+      <h2 style="margin-top: 0; margin-bottom: 4px;" id="triage-student-name">—</h2>
+      <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0; margin-bottom: 20px;" id="triage-student-details">—</p>
+
+      <div class="field">
+        <span style="display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 8px;">Motivo relatado pelo solicitante</span>
+        <blockquote id="triage-motivo" class="triage-motivo"></blockquote>
+      </div>
+
+      <form id="form-referral-triage" novalidate>
+        <div class="field">
+          <label for="triage-prioridade">Prioridade <span class="req">*</span></label>
+          <select id="triage-prioridade" class="input-plain" required>
+            <option value="Baixa">Baixa</option>
+            <option value="Média">Média</option>
+            <option value="Alta">Alta</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="triage-designado">Profissional Designado <span class="req">*</span></label>
+          <select id="triage-designado" class="input-plain" required>
+            <option value="" disabled selected>Carregando profissionais...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="triage-observacoes">Observações da Coordenação</label>
+          <textarea id="triage-observacoes" class="input-plain" style="height: 100px; padding: 12px; resize: vertical; font-family: inherit;" placeholder="Anotações internas, visíveis apenas para a coordenação."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin-top: 12px;">
+          <button type="button" class="btn btn-outline" id="btn-cancel-triage" style="padding: 12px 20px; font-weight: 700;">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-triage" style="padding: 12px 20px; font-weight: 700;">Salvar Atribuição</button>
+        </div>
       </form>
     </div>
   </div>

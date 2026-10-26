@@ -1,6 +1,6 @@
 # Referral Queue Management Backend
 
-*This specification defines the backend implementation of the student referral database model, status transitions, and coordinator/psychologist APIs, which is paired with the frontend specification in [todo/0007-referral-queue-management-frontend.md](0007-referral-queue-management-frontend.md).*
+*This specification defines the backend implementation of the student referral database model, status transitions, and coordinator/psychologist APIs, Its frontend counterpart has already shipped and consumes the contract below; its behaviour is recorded in `frontend/test/test_referral_queue_table.js`, `frontend/test/test_triage_modal_interactions.js`, and `frontend/test/test_psychologist_actions.js`.*
 
 ## Problem
 Currently, there is no standardized, secure, or audited pipeline within App A.M.P.A.R.A. to escalate students showing critical psychological distress to specialized care. When teachers (Docentes) observe alarming behavioral or emotional patterns in students, they must communicate with the school's Pedagogical Coordinator (Coordenador Pedagógico) or mental health staff (psychologists/social workers) using unstructured channels like papers or text messages. This lacks accountability, leads to delayed or missed care for students in crisis, and violates Brazil's General Data Protection Law (LGPD - Lei Geral de Proteção de Dados) by transmitting sensitive student health data without rigorous access logging and access control.
@@ -31,6 +31,7 @@ We will add a new `Encaminhamento` model in `src/models.py` inside each school's
    - `designado_id` (INTEGER, foreign key referencing `usuarios(id)`, nullable=True) - The psychologist or social worker assigned to the case
    - `motivo` (TEXT, nullable=False) - Verbatim description of behavioral or emotional distress
    - `observacoes_coordenacao` (TEXT, nullable=True) - Coordinator's private notes and internal logs
+   - `resumo_encerramento` (TEXT, nullable=True) - Short administrative closure note written by the assigned professional when concluding the case (e.g., "Acompanhamento concluído; família orientada a procurar a UBS."). It is not a clinical record, see _Out of Scope_.
    - `prioridade` (VARCHAR(20), default='Média') - Values: `"Baixa"`, `"Média"`, `"Alta"`
    - `status` (VARCHAR(30), default='Aguardando Triagem') - Values: `"Aguardando Triagem"`, `"Em Atendimento"`, `"Concluído"`, `"Arquivado"`
    - `created_at` (TIMESTAMP)
@@ -94,6 +95,7 @@ State transitions are strictly audited and guarded by Role-Based Access Control 
         "nome": "Psicóloga Amanda Costa"
       },
       "motivo": "Estudante tem se isolado frequentemente...",
+      "observacoes_coordenacao": "Conversei com o professor e o caso requer atenção prioritária.",
       "prioridade": "Média",
       "status": "Aguardando Triagem",
       "created_at": "2026-09-12T10:15:00Z"
@@ -101,6 +103,7 @@ State transitions are strictly audited and guarded by Role-Based Access Control 
   ]
 }
 ```
+- `designado` is `null` while the referral has not been assigned, and `observacoes_coordenacao` is `null` until the coordinator writes one. The triage modal pre-fills its fields from these values, so both are always present in each item.
 
 #### 3. Manage a Referral (Coordinator Triage)
 `PUT /api/gestao/encaminhamentos/<int:id>`
@@ -158,9 +161,11 @@ State transitions are strictly audited and guarded by Role-Based Access Control 
 - Request Body:
 ```json
 {
-  "status": "Em Atendimento"
+  "status": "Concluído",
+  "resumo_encerramento": "Acompanhamento concluído; família orientada a procurar a UBS."
 }
 ```
+- `resumo_encerramento` is required when `status` is `"Concluído"` and ignored otherwise. If it is missing or blank on a conclusion, return status 400 Bad Request with: `{"sucesso": false, "mensagem": "Informe um resumo do encerramento do caso."}`
 - Validations:
   - The logged-in user must be the `designado_id` of the referral or the coordinator; otherwise, return status 403 Forbidden with: `{"sucesso": false, "mensagem": "Você não tem permissão para alterar o status deste caso."}`
   - The requested state must follow the State Machine Transition Rules (e.g., cannot move a concluded case back to awaiting triage).
@@ -173,16 +178,35 @@ State transitions are strictly audited and guarded by Role-Based Access Control 
 }
 ```
 
+#### 6. List Multidisciplinary Professionals (Coordinator Triage)
+`GET /api/usuarios?perfil=equipe_multidisciplinar`
+- Description: Feeds the "Profissional Designado" dropdown of the triage modal. It extends the existing `GET /api/usuarios` route with an optional `perfil` filter instead of adding a new route, and keeps that route's bare-array response so the credentialing table that already consumes it keeps working. Accessible only to `gestor_escolar` / coordinator.
+- When `perfil` is present, only users of that profile with `status == "Ativo"` are returned, so pending or suspended professionals can never be assigned.
+- Response Status: 200 OK
+- Response Body:
+```json
+[
+  {
+    "id": 8,
+    "nome": "Psicóloga Amanda Costa",
+    "perfil": "equipe_multidisciplinar",
+    "cargo": "Psicóloga Escolar",
+    "status": "Ativo"
+  }
+]
+```
+
 ## Testing Decisions
 We will write exhaustive unit and behavioral tests under `backend/test/`:
 - `test/test_models_encaminhamento.py`: Tests the `Encaminhamento` model constraints, foreign keys, and default values.
 - `test/test_api_encaminhamentos_gestao.py`: Tests coordinator-only endpoints (`GET /api/gestao/encaminhamentos` and `PUT /api/gestao/encaminhamentos/<id>`), checking state validations, profile checks, and assigning invalid user roles (which must be blocked).
 - `test/test_api_encaminhamentos_docente.py`: Tests the creation of referrals by teachers and blocks them from triaging or viewing other teachers' referrals.
-- `test/test_api_encaminhamentos_multidisciplinar.py`: Tests psychologist-specific list and status transitions, verifying that a psychologist cannot transition or modify referrals assigned to other colleagues.
+- `test/test_api_encaminhamentos_multidisciplinar.py`: Tests psychologist-specific list and status transitions, verifying that a psychologist cannot transition or modify referrals assigned to other colleagues, and that concluding without `resumo_encerramento` is refused.
+- `test/test_app.py` (extended): `GET /api/usuarios?perfil=equipe_multidisciplinar` returns only active professionals, and the unfiltered call keeps its current response.
 
 ## Out of Scope
-- Frontend dashboard screens, management tables, filters, and assignment modals (fully covered in [todo/0007-referral-queue-management-frontend.md](todo/0007-referral-queue-management-frontend.md)).
-- Creation of electronic medical/psychological records (PEP). The system only tracks the state of the referral pipeline, not clinical session notes, protecting student medical privacy.
+- Frontend dashboard screens, management tables, filters, and assignment modals, already shipped in `frontend/public/dashboard.html`.
+- Creation of electronic medical/psychological records (PEP). The system only tracks the state of the referral pipeline, not clinical session notes, protecting student medical privacy; `resumo_encerramento` is an administrative closure note and the UI tells professionals not to write clinical details in it.
 - External SMS/email notifications to parents or health clinics.
 
 ## Further Notes
