@@ -54,10 +54,21 @@
   });
 
   /* -------------------- Redirecionamento RBAC -------------------- */
+  // Clean URLs resolve both on Flask routes and on nginx (try_files $uri.html).
+  var PENDING_URL = '/conta_pendente';
+
   function routeByProfile(perfil) {
-    if (perfil === 'gestor_escolar') return 'dashboard_gestao.html';
-    if (perfil === 'equipe_multidisciplinar') return 'dashboard_saude.html';
-    return 'dashboard.html';
+    if (perfil === 'gestor_escolar') return '/dashboard_gestao';
+    if (perfil === 'equipe_multidisciplinar') return '/dashboard_saude';
+    return '/dashboard';
+  }
+
+  function startSession(data) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('usuario', JSON.stringify(data.usuario));
+    // dashboard.html still reads the logged user from sessionStorage.
+    sessionStorage.setItem('usuarioLogado', JSON.stringify(data.usuario));
+    window.location.href = routeByProfile(data.usuario.perfil);
   }
 
   /* -------------------- Login Flow -------------------- */
@@ -65,58 +76,68 @@
   var mfaForm = document.getElementById('mfaForm');
   var credentialsContainer = document.getElementById('credentialsContainer');
   var mfaContainer = document.getElementById('mfaContainer');
+  var resendMfaLink = document.getElementById('resendMfaLink');
   var currentSessionToken = null;
 
   if (loginForm) {
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!loginForm.checkValidity()) { loginForm.reportValidity(); return; }
+      submitCredentials();
+    });
+  }
 
-      var email = document.getElementById('email').value.trim();
-      var senha = document.getElementById('senha').value;
+  if (resendMfaLink) {
+    resendMfaLink.addEventListener('click', function (e) {
+      e.preventDefault();
+      submitCredentials(function () { toast('Enviamos um novo código de verificação.'); });
+    });
+  }
 
-      fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, senha: senha })
-      })
-      .then(function(res) {
-        if (res.status === 403) {
-           return res.json().then(function(data) {
-             if (data.status === 'pendente') {
-               window.location.href = 'conta_pendente.html';
-             } else {
-               toast(data.mensagem || 'Conta bloqueada.');
-             }
-             throw new Error('Forbidden');
-           });
-        }
-        return res.json();
-      })
-      .then(function(data) {
-        if (!data.sucesso) {
-          if (data.status === 'pendente') {
-            window.location.href = 'conta_pendente.html';
-          } else {
-            toast(data.mensagem || 'E-mail ou senha incorretos.');
-          }
-          return;
-        }
+  function submitCredentials(onMfaSent) {
+    var email = document.getElementById('email').value.trim();
+    var senha = document.getElementById('senha').value;
 
-        if (data.mfa_required) {
-          currentSessionToken = data.session_token;
-          credentialsContainer.classList.add('hidden');
-          mfaContainer.classList.remove('hidden');
-          document.getElementById('mfa_code').focus();
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, senha: senha })
+    })
+    .then(function(res) {
+      if (res.status === 403) {
+         return res.json().then(function(data) {
+           if (data.status === 'pendente') {
+             window.location.href = PENDING_URL;
+           } else {
+             toast(data.mensagem || 'Conta bloqueada.');
+           }
+           throw new Error('Forbidden');
+         });
+      }
+      return res.json();
+    })
+    .then(function(data) {
+      if (!data.sucesso) {
+        if (data.status === 'pendente') {
+          window.location.href = PENDING_URL;
         } else {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('usuario', JSON.stringify(data.usuario));
-          window.location.href = routeByProfile(data.usuario.perfil);
+          toast(data.mensagem || 'E-mail ou senha incorretos.');
         }
-      })
-      .catch(function(err) {
-        if (err.message !== 'Forbidden') toast('Erro ao conectar ao servidor.');
-      });
+        return;
+      }
+
+      if (data.mfa_required) {
+        currentSessionToken = data.session_token;
+        credentialsContainer.classList.add('hidden');
+        mfaContainer.classList.remove('hidden');
+        document.getElementById('mfa_code').focus();
+        if (onMfaSent) onMfaSent();
+      } else {
+        startSession(data);
+      }
+    })
+    .catch(function(err) {
+      if (err.message !== 'Forbidden') toast('Erro ao conectar ao servidor.');
     });
   }
 
@@ -124,7 +145,10 @@
     mfaForm.addEventListener('submit', function (e) {
       e.preventDefault();
       var code = document.getElementById('mfa_code').value.trim();
-      if (!code) return;
+      if (!/^\d{6}$/.test(code)) {
+        toast('Informe o código de 6 dígitos enviado para você.');
+        return;
+      }
 
       fetch('/api/login/mfa-verify', {
         method: 'POST',
@@ -133,8 +157,14 @@
       })
       .then(function(res) {
         if (res.status === 403) {
-           window.location.href = 'conta_pendente.html';
-           throw new Error('Forbidden');
+           return res.json().then(function(data) {
+             if (data.status === 'suspenso') {
+               toast(data.mensagem || 'Conta bloqueada.');
+             } else {
+               window.location.href = PENDING_URL;
+             }
+             throw new Error('Forbidden');
+           });
         }
         return res.json();
       })
@@ -143,9 +173,7 @@
           toast(data.mensagem || 'Código inválido.');
           return;
         }
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('usuario', JSON.stringify(data.usuario));
-        window.location.href = routeByProfile(data.usuario.perfil);
+        startSession(data);
       })
       .catch(function(err) {
         if (err.message !== 'Forbidden') toast('Erro ao verificar código.');
@@ -285,8 +313,15 @@
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      // Pressing Enter inside an earlier step submits the form; treat it as "Próximo".
+      if (current < TOTAL) {
+        if (validateStep(current)) goTo(current + 1);
+        return;
+      }
       if (!validateStep(4)) return;
-      
+
+      var registro = document.getElementById('registro_profissional').value.trim();
+
       submitBtn.disabled = true;
       submitBtn.textContent = 'Enviando...';
 
@@ -298,7 +333,7 @@
         perfil: chosenRole,
         matricula: document.getElementById('matricula').value.trim(),
         cargo: document.getElementById('cargo').value.trim(),
-        registro_profissional: document.getElementById('registro_profissional') ? document.getElementById('registro_profissional').value.trim() : null,
+        registro_profissional: (chosenRole === 'equipe_multidisciplinar' && registro) ? registro : null,
         senha: pass1.value,
         aceite_lgpd: document.getElementById('aceite_lgpd').checked,
         aceite_sigilo: document.getElementById('aceite_sigilo').checked
@@ -312,7 +347,7 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.sucesso || data.status === 'pendente') {
-          window.location.href = 'conta_pendente.html';
+          window.location.href = PENDING_URL;
         } else {
           toast(data.mensagem || 'Erro ao realizar cadastro.');
           submitBtn.disabled = false;

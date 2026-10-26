@@ -1,16 +1,16 @@
 {
-  "name": "test",
+  "name": "ampara-frontend-tests",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Frontend tests for App A.M.P.A.R.A.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "jsdom": "^29.1.1"
+    "jsdom": "25.0.1"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
   }
 }
