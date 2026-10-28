@@ -159,6 +159,41 @@
       }
     }
     
+    /* Layout do painel do professor: sidebar ao lado no desktop, acima do conteúdo no celular */
+    .teacher-layout {
+      display: grid;
+      /* minmax(0, 1fr) lets the content column shrink instead of pushing the page sideways. */
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 28px;
+      margin-top: 24px;
+      align-items: start;
+    }
+    .teacher-sidebar-nav,
+    #sidebar-class-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    @media (max-width: 768px) {
+      .teacher-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+      }
+      .teacher-sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      #sidebar-class-list {
+        display: contents;
+      }
+      .teacher-sidebar-nav .btn-sidebar {
+        width: auto;
+      }
+      .teacher-sidebar-nav hr {
+        display: none;
+      }
+    }
+
     /* Estilos para a sidebar e cards de turma do professor */
     .btn-sidebar {
       background: none;
@@ -338,7 +373,7 @@
       </span>
     </a>
     <div class="header-actions">
-      <a class="btn btn-outline" href="/">Sair</a>
+      <button type="button" class="btn btn-outline" id="btn-logout">Sair</button>
     </div>
   </header>
 
@@ -346,25 +381,6 @@
   <main id="conteudo" class="container dashboard-container">
     <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Ambiente Protegido e Auditado</span>
     <h1 style="margin-top: 0; margin-bottom: 24px;" id="dashboard-title">Painel de Credenciamento</h1>
-
-    <!-- Seletor de Perfil Simulado (RBAC Switcher) -->
-    <div class="form-card" id="rbac-switcher-box" style="padding: 16px 24px; margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; background: var(--card-inset); border-color: var(--border-strong);">
-      <div>
-        <strong style="display: block; font-size: 0.95rem; color: var(--navy);">Seletor de Perfil Simulado (RBAC)</strong>
-        <span style="font-size: 0.82rem; color: var(--muted);">Alterne entre os perfis para testar as permissões de acesso do Gestor, Professor ou Equipe Multidisciplinar.</span>
-      </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button type="button" class="btn btn-primary" id="btn-rbac-gestor" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
-          Gestor Escolar
-        </button>
-        <button type="button" class="btn btn-outline" id="btn-rbac-docente" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
-          Docente (Professor)
-        </button>
-        <button type="button" class="btn btn-outline" id="btn-rbac-saude" style="padding: 8px 16px; font-size: 0.88rem; font-weight: 700;">
-          Equipe Multidisciplinar
-        </button>
-      </div>
-    </div>
 
     <!-- Navegação Global do Painel (Painel de Trabalho vs Biblioteca de Apoio) -->
     <div class="tabs-nav" role="tablist" aria-label="Navegação Principal" style="margin-bottom: 24px; border-bottom: 2px solid var(--border);">
@@ -376,8 +392,8 @@
       </button>
     </div>
 
-    <!-- PAINEL GESTOR (Default) -->
-    <div id="panel-gestor">
+    <!-- PAINEL GESTOR -->
+    <div id="panel-gestor" style="display: none;">
       
       <!-- Abas de Navegação Interna da Coordenação -->
       <div class="tabs-nav" role="tablist" aria-label="Abas da Coordenação" style="margin-bottom: 24px; overflow-x: auto;">
@@ -404,28 +420,19 @@
         <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
           <a class="btn btn-outline" href="/cadastro_turma">📂 Cadastrar Turmas</a>
           <a class="btn btn-outline" href="/cadastro_estudante">🎓 Cadastrar Estudantes</a>
-          <button type="button" class="btn btn-outline" id="btn-open-add-teacher">👤 Adicionar Professor</button>
         </div>
 
         <!-- Grade de Estatísticas -->
         <div class="stats-grid">
           <div class="stat-card">
-            <div class="value" id="stat-total">0</div>
-            <div class="label">Total de Profissionais</div>
-          </div>
-          <div class="stat-card">
-            <div class="value" id="stat-approved" style="color: var(--ok);">0</div>
-            <div class="label">Credenciados / Ativos</div>
-          </div>
-          <div class="stat-card">
             <div class="value" id="stat-pending" style="color: var(--warn);">0</div>
-            <div class="label">Aguardando Auditoria</div>
+            <div class="label">Aguardando Aprovação</div>
           </div>
         </div>
 
         <!-- Tabela de Usuários -->
         <div class="users-table-card">
-          <h2>Lista de Profissionais Cadastrados</h2>
+          <h2>Solicitações Pendentes</h2>
           <p class="description">Revise as informações de cadastro e valide o vínculo profissional de cada usuário antes de conceder acesso ao sistema.</p>
 
           <div class="table-responsive">
@@ -435,8 +442,8 @@
                   <th>Nome</th>
                   <th>E-mail</th>
                   <th>Perfil</th>
-                  <th>Escola</th>
-                  <th>Status de Validação</th>
+                  <th>Cargo / Matrícula</th>
+                  <th>Solicitado em</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -591,23 +598,7 @@
               <div class="field">
                 <label style="margin-bottom: 8px;">Destinatários (Selecione quem receberá) <span class="req">*</span></label>
                 <div style="background: var(--card-inset); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; flex-direction: column; gap: 8px; max-height: 150px; overflow-y: auto;" id="share-destinatarios-container">
-                  <!-- Checkboxes das turmas -->
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; margin: 0;">
-                    <input type="checkbox" name="destinatarios" value="1a" checked style="margin: 0;" />
-                    <span>🏫 1º Ano A (Prof. Ana Silva)</span>
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; margin: 0;">
-                    <input type="checkbox" name="destinatarios" value="1b" style="margin: 0;" />
-                    <span>🏫 1º Ano B (Prof. Marcos Rocha)</span>
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; margin: 0;">
-                    <input type="checkbox" name="destinatarios" value="2a" style="margin: 0;" />
-                    <span>🏫 2º Ano A (Prof. Carla Lima)</span>
-                  </label>
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; margin: 0;">
-                    <input type="checkbox" name="destinatarios" value="2b" style="margin: 0;" />
-                    <span>🏫 2º Ano B (Prof. Juliano Souza)</span>
-                  </label>
+                  <span style="font-size: 0.88rem; color: var(--muted);">Carregando turmas...</span>
                 </div>
               </div>
 
@@ -689,27 +680,16 @@
 
     <!-- PAINEL DOCENTE / PROFESSOR (Gestão de Comportamento) -->
     <div id="panel-docente" style="display: none;">
-      <div style="display: grid; grid-template-columns: 240px 1fr; gap: 28px; margin-top: 24px; align-items: start;">
+      <div class="teacher-layout">
         
         <!-- Sidebar de Turmas -->
         <aside class="form-card" style="padding: 20px; border-radius: var(--radius-sm); border-color: var(--border); height: fit-content; margin-bottom: 0;">
           <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 1.15rem; color: var(--navy-dark); font-family: var(--font-serif);">Minhas Turmas</h3>
-          <nav aria-label="Navegação entre turmas" style="display: flex; flex-direction: column; gap: 8px;">
+          <nav aria-label="Navegação entre turmas" class="teacher-sidebar-nav">
             <button type="button" class="btn-sidebar active" data-class="all" id="btn-sidebar-all">
               📂 Todas as Turmas
             </button>
-            <button type="button" class="btn-sidebar" data-class="1a">
-              🏫 1º Ano A
-            </button>
-            <button type="button" class="btn-sidebar" data-class="1b">
-              🏫 1º Ano B
-            </button>
-            <button type="button" class="btn-sidebar" data-class="2a">
-              🏫 2º Ano A
-            </button>
-            <button type="button" class="btn-sidebar" data-class="2b">
-              🏫 2º Ano B
-            </button>
+            <div id="sidebar-class-list"></div>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 12px 0;" />
             <button type="button" class="btn-sidebar" data-class="capacitacao" id="btn-sidebar-capacitacao">
               🎓 Formação &amp; Capacitação
@@ -725,52 +705,8 @@
             <h2 style="margin-top: 0; margin-bottom: 8px; color: var(--navy);">Visão Geral de Turmas</h2>
             <p style="color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; margin-top: 0;">Clique em uma de suas turmas vinculadas para visualizar e registrar o comportamento dos estudantes.</p>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px;">
-              
-              <!-- Card Turma 1 -->
-              <div class="form-card class-select-card" data-class="1a" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
-                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
-                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">1º Ano A</h3>
-                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">34</strong> estudantes matriculados</p>
-                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--warn); font-weight: 700;">
-                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--warn);"></span>
-                  2 alertas emocionais ativos
-                </div>
-              </div>
-
-              <!-- Card Turma 2 -->
-              <div class="form-card class-select-card" data-class="1b" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
-                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
-                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">1º Ano B</h3>
-                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">30</strong> estudantes matriculados</p>
-                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--ok); font-weight: 700;">
-                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok);"></span>
-                  Comportamento estável
-                </div>
-              </div>
-
-              <!-- Card Turma 3 -->
-              <div class="form-card class-select-card" data-class="2a" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
-                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
-                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">2º Ano A</h3>
-                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">28</strong> estudantes matriculados</p>
-                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--warn); font-weight: 700;">
-                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--warn);"></span>
-                  1 alerta emocional ativo
-                </div>
-              </div>
-
-              <!-- Card Turma 4 -->
-              <div class="form-card class-select-card" data-class="2b" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0;">
-                <div style="font-size: 2.2rem; margin-bottom: 12px;">🏫</div>
-                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">2º Ano B</h3>
-                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">32</strong> estudantes matriculados</p>
-                <div style="margin-top: 14px; font-size: 0.78rem; display: flex; align-items: center; gap: 6px; color: var(--ok); font-weight: 700;">
-                  <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok);"></span>
-                  Comportamento estável
-                </div>
-              </div>
-
+            <div id="teacher-class-cards" aria-live="polite" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 20px;">
+              <div class="empty-state">Carregando turmas...</div>
             </div>
           </div>
 
@@ -784,7 +720,7 @@
             </div>
             <p id="selected-class-description" style="color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; margin-top: 0;">Lista de estudantes vinculados. Toque nos ícones de sentimentos ou clique em "Registrar Observação" para relatar comportamentos.</p>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;" id="students-grid-container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 20px;" id="students-grid-container">
               <!-- Cards dos Alunos serão injetados dinamicamente via JS com suporte a emoções e logs -->
             </div>
             </div>
@@ -865,130 +801,72 @@
     (function() {
       'use strict';
 
-      let cachedUsuarios = [];
+      const PERFIL_LABELS = {
+        gestor_escolar: 'Gestão / Coordenação',
+        docente: 'Docente',
+        equipe_multidisciplinar: 'Equipe Multidisciplinar'
+      };
 
-      async function carregarUsuarios() {
-        try {
-          if (cachedUsuarios.length === 0) {
-            const res = await fetch('/api/usuarios');
-            cachedUsuarios = await res.json();
-          }
-          renderizarUsuarios(cachedUsuarios);
-        } catch (err) {
-          console.error('Erro ao carregar usuários:', err);
-          const tbody = document.getElementById('users-tbody');
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" class="empty-state" style="color: var(--warn);">
-                <div class="icon">⚠️</div>
-                <div>Erro ao conectar ao servidor para buscar dados.</div>
-              </td>
-            </tr>
-          `;
-        }
+      function renderCredentialingMessage(icon, message) {
+        document.getElementById('users-tbody').innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <div class="icon">${icon}</div>
+              <div>${message}</div>
+            </td>
+          </tr>
+        `;
       }
 
-      function renderizarUsuarios(usuarios) {
-        const tbody = document.getElementById('users-tbody');
-        if (!usuarios || usuarios.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" class="empty-state">
-                <div class="icon">📁</div>
-                <div>Nenhum profissional cadastrado até o momento.</div>
-              </td>
-            </tr>
-          `;
-          atualizarEstatisticas(0, 0, 0);
+      function carregarPendentes() {
+        return apiRequest('/api/gestao/pendentes')
+          .then(data => renderizarPendentes(data.pendentes || []))
+          .catch(err => {
+            if (err.message !== 'Unauthorized') renderCredentialingMessage('⚠️', 'Erro ao conectar ao servidor para buscar dados.');
+          });
+      }
+
+      function renderizarPendentes(pendentes) {
+        document.getElementById('stat-pending').textContent = pendentes.length;
+        if (!pendentes.length) {
+          renderCredentialingMessage('📁', 'Nenhuma solicitação de cadastro pendente.');
           return;
         }
-
-        let total = usuarios.length;
-        let aprovados = 0;
-        let pendentes = 0;
-
-        tbody.innerHTML = '';
-        usuarios.forEach(u => {
-          if (u.validado) aprovados++;
-          else pendentes++;
-
-          const tr = document.createElement('tr');
-          tr.id = `user-row-${u.id}`;
-
-          // Mapeamento semântico do perfil
-          let perfilSemantico = u.perfil;
-          if (u.perfil === 'docente') perfilSemantico = 'Docente';
-          else if (u.perfil === 'equipe') perfilSemantico = 'Equipe Multidisciplinar';
-          else if (u.perfil === 'gestao') perfilSemantico = 'Gestão / Coordenação';
-
-          const statusBadgeHtml = u.validado 
-            ? `<span class="status-badge approved"><span class="dot"></span> Aprovado / Ativo</span>`
-            : `<span class="status-badge pending"><span class="dot"></span> Pendente de Auditoria</span>`;
-
-          const acoesHtml = u.validado
-            ? `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; cursor: not-allowed;" disabled>✓ Já Credenciado</button>`
-            : `<button class="btn btn-primary btn-aprovar" data-id="${u.id}" style="padding: 6px 12px; font-size: 0.8rem;">Aprovar Cadastro</button>`;
-
-          tr.innerHTML = `
+        document.getElementById('users-tbody').innerHTML = pendentes.map(u => `
+          <tr id="user-row-${u.id}">
             <td><strong>${escapeHtml(u.nome)}</strong></td>
             <td>${escapeHtml(u.email)}</td>
-            <td>${escapeHtml(perfilSemantico)}</td>
-            <td>${escapeHtml(u.escola || 'Não especificada')}</td>
-            <td id="status-cell-${u.id}">${statusBadgeHtml}</td>
-            <td id="action-cell-${u.id}">${acoesHtml}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        atualizarEstatisticas(total, aprovados, pendentes);
-        vincularEventosAprovacao();
+            <td>${escapeHtml(PERFIL_LABELS[u.perfil] || u.perfil)}</td>
+            <td>${escapeHtml(u.cargo)}<span class="referral-meta">Matrícula ${escapeHtml(u.matricula)}</span></td>
+            <td>${formatReferralDate(u.created_at)}</td>
+            <td><button type="button" class="btn btn-primary btn-aprovar" data-id="${u.id}" aria-label="Aprovar cadastro de ${escapeHtml(u.nome)}" style="padding: 6px 12px; font-size: 0.8rem;">Aprovar Cadastro</button></td>
+          </tr>
+        `).join('');
       }
 
-      function atualizarEstatisticas(total, aprovados, pendentes) {
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-approved').textContent = aprovados;
-        document.getElementById('stat-pending').textContent = pendentes;
-      }
-
-      function vincularEventosAprovacao() {
-        document.querySelectorAll('.btn-aprovar').forEach(btn => {
-          btn.addEventListener('click', async function() {
-            const id = btn.getAttribute('data-id');
-            btn.disabled = true;
-            btn.textContent = 'Processando...';
-
-            try {
-              const res = await fetch(`/api/aprovar/${id}`);
-              const result = await res.json();
-              if (result.sucesso) {
-                // Atualizar célula de status
-                const statusCell = document.getElementById(`status-cell-${id}`);
-                statusCell.innerHTML = `<span class="status-badge approved"><span class="dot"></span> Aprovado / Ativo</span>`;
-
-                // Atualizar célula de ações
-                const actionCell = document.getElementById(`action-cell-${id}`);
-                actionCell.innerHTML = `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; cursor: not-allowed;" disabled>✓ Já Credenciado</button>`;
-
-                // Disparar toast de sucesso (função global em main.js)
-                if (typeof toast === 'function') {
-                  toast('Profissional credenciado com sucesso!');
-                }
-
-                // Recarregar os números estatísticos
-                carregarUsuarios();
-              } else {
-                btn.disabled = false;
-                btn.textContent = 'Aprovar Cadastro';
-                alert('Ocorreu um erro ao aprovar o cadastro.');
-              }
-            } catch (err) {
-              console.error('Erro na aprovação do usuário:', err);
-              btn.disabled = false;
-              btn.textContent = 'Aprovar Cadastro';
-              alert('Erro de conexão ao tentar aprovar o cadastro.');
+      function aprovarCadastro(btn) {
+        const id = btn.getAttribute('data-id');
+        const reativar = () => {
+          btn.disabled = false;
+          btn.textContent = 'Aprovar Cadastro';
+        };
+        btn.disabled = true;
+        btn.textContent = 'Processando...';
+        apiRequest(`/api/gestao/usuarios/${id}/aprovar`, { method: 'POST' })
+          .then(result => {
+            if (!result.sucesso) {
+              toast(result.mensagem || 'Não foi possível aprovar o cadastro.');
+              reativar();
+              return;
             }
+            toast(result.mensagem || 'Usuário aprovado com sucesso.');
+            return carregarPendentes();
+          })
+          .catch(err => {
+            if (err.message === 'Unauthorized') return;
+            toast('Erro de conexão ao tentar aprovar o cadastro.');
+            reativar();
           });
-        });
       }
 
       function escapeHtml(text) {
@@ -1002,39 +880,83 @@
           .replace(/'/g, "&#039;");
       }
 
+      // --- TURMAS E ESTUDANTES (GET /api/turmas e GET /api/estudantes) ---
+      let turmasPromise = null;
+      let turmasCache = [];
+      const studentsById = new Map();
+
+      function loadTurmas() {
+        if (!turmasPromise) {
+          turmasPromise = apiRequest('/api/turmas').then(data => {
+            turmasCache = data.turmas || [];
+            return turmasCache;
+          });
+          // A failed load is retried the next time a screen asks for the classes.
+          turmasPromise.catch(() => { turmasPromise = null; });
+        }
+        return turmasPromise;
+      }
+
+      function turmaNome(id) {
+        const turma = turmasCache.find(t => String(t.id) === String(id));
+        return turma ? turma.nome : '';
+      }
+
+      // Observations and emotions have no API yet (todo/0015), so they stay in memory per student.
+      function rememberStudents(estudantes) {
+        return estudantes.map(e => {
+          const student = Object.assign(studentsById.get(e.id) || { activeEmotions: [], logs: [] }, e);
+          studentsById.set(e.id, student);
+          return student;
+        });
+      }
+
+      function loadEstudantes(params) {
+        const query = new URLSearchParams(params || {}).toString();
+        return apiRequest('/api/estudantes' + (query ? '?' + query : ''))
+          .then(data => rememberStudents(data.estudantes || []));
+      }
+
+      function estudantesLabel(total) {
+        return total === 1 ? 'estudante matriculado' : 'estudantes matriculados';
+      }
+
+      // --- DIÁLOGOS (Escape, clique no fundo e retorno do foco) ---
+      const dialogOpeners = new Map();
+
+      function openDialog(modal, focusTarget) {
+        dialogOpeners.set(modal, document.activeElement);
+        modal.style.display = 'flex';
+        if (focusTarget) focusTarget.focus();
+      }
+
+      function closeDialog(modal) {
+        if (modal.style.display === 'none') return;
+        modal.style.display = 'none';
+        const opener = dialogOpeners.get(modal);
+        dialogOpeners.delete(modal);
+        if (opener && opener.isConnected) opener.focus();
+      }
+
+      function bindDialog(modal, closeButton, onClose) {
+        const close = () => {
+          if (modal.style.display === 'none') return;
+          closeDialog(modal);
+          if (onClose) onClose();
+        };
+        closeButton.addEventListener('click', close);
+        modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+        return close;
+      }
+
       // ==========================================================
-      // PAINEL DO PROFESSOR (Gestão Comportamental & RBAC)
+      // PAINEL DO PROFESSOR (Gestão Comportamental)
       // ==========================================================
 
-      // Banco de Dados Simulado de Estudantes e Turmas
-      const mockStudents = {
-        "1a": [
-          { id: 1, nome: "Lucas Mendes de Oliveira", matricula: "2026.01.0001", activeEmotions: ["ansiedade", "agitacao"], logs: [
-            { date: "15/07/2026 14:32", severity: "medium", text: "Estudante demonstrou inquietação na aula de matemática, andando pela sala repetidamente." }
-          ]},
-          { id: 2, nome: "Ana Beatriz Santos", matricula: "2026.01.0002", activeEmotions: ["apatia"], logs: [] },
-          { id: 3, nome: "Gabriel Silva Costa", matricula: "2026.01.0003", activeEmotions: ["euforia"], logs: [] },
-          { id: 4, nome: "Mariana Rocha Lima", matricula: "2026.01.0004", activeEmotions: [], logs: [] }
-        ],
-        "1b": [
-          { id: 5, nome: "João Pedro Alves", matricula: "2026.01.0101", activeEmotions: ["tristeza"], logs: [
-            { date: "18/07/2026 09:15", severity: "high", text: "Estudante isolou-se dos colegas no intervalo e chorou discretamente na biblioteca." }
-          ]},
-          { id: 6, nome: "Laura Ferreira Gomes", matricula: "2026.01.0102", activeEmotions: [], logs: [] },
-          { id: 7, nome: "Rodrigo Souza Neto", matricula: "2026.01.0103", activeEmotions: [], logs: [] }
-        ],
-        "2a": [
-          { id: 8, nome: "Guilherme Cardoso", matricula: "2026.02.0001", activeEmotions: ["ansiedade"], logs: [] },
-          { id: 9, nome: "Sofia Martins Pinto", matricula: "2026.02.0002", activeEmotions: [], logs: [] }
-        ],
-        "2b": [
-          { id: 10, nome: "Thiago Barbosa", matricula: "2026.02.0101", activeEmotions: [], logs: [] },
-          { id: 11, nome: "Camila Ribeiro Araujo", matricula: "2026.02.0102", activeEmotions: ["euforia"], logs: [] }
-        ]
-      };
-
-      let currentRole = "gestor"; // "gestor", "docente" ou "saude"
-      let currentSelectedClass = "all"; // "all" ou id da turma ("1a", etc)
+      let currentRole = null; // "gestor", "docente" ou "saude"
+      let currentSelectedClass = "all"; // "all", "capacitacao" ou id da turma
+      let currentClassStudents = [];
       let activeStudentForModal = null;
 
       const ROLE_PANELS = {
@@ -1043,52 +965,33 @@
         saude: { panel: 'panel-saude', title: 'Casos Designados' }
       };
 
+      // Maps usuarioLogado.perfil to its panel; authorization itself is enforced by the API.
+      const PERFIL_ROLES = {
+        gestor_escolar: 'gestor',
+        docente: 'docente',
+        equipe_multidisciplinar: 'saude'
+      };
+
       function showRolePanel(role) {
         currentRole = role;
         // While the library tab is open the work panels stay hidden; "Painel de Trabalho" shows the role's panel again.
         const libraryOpen = document.getElementById('tab-btn-biblioteca').classList.contains('active');
         Object.keys(ROLE_PANELS).forEach(r => {
           document.getElementById(ROLE_PANELS[r].panel).style.display = (r === role && !libraryOpen) ? 'block' : 'none';
-          const btn = document.getElementById('btn-rbac-' + r);
-          if (btn) btn.className = r === role ? 'btn btn-primary' : 'btn btn-outline';
         });
         document.getElementById('dashboard-title').textContent = ROLE_PANELS[role].title;
         if (role === 'saude') loadAssignedReferrals();
       }
 
       function inicializarPainelProfessor() {
-        const btnRbacGestor = document.getElementById('btn-rbac-gestor');
-        const btnRbacDocente = document.getElementById('btn-rbac-docente');
-        const btnRbacSaude = document.getElementById('btn-rbac-saude');
-
-        if (!btnRbacGestor || !btnRbacDocente || !btnRbacSaude) return;
-
-        btnRbacGestor.addEventListener('click', () => showRolePanel('gestor'));
-
-        btnRbacDocente.addEventListener('click', () => {
-          showRolePanel('docente');
+        const selectClass = (e) => {
+          const target = e.target.closest('[data-class]');
+          if (!target) return;
+          currentSelectedClass = target.getAttribute('data-class');
           renderizarTurmasDocente();
-        });
-
-        btnRbacSaude.addEventListener('click', () => showRolePanel('saude'));
-
-        // Escutar cliques em cards de turma
-        document.querySelectorAll('.class-select-card').forEach(card => {
-          card.addEventListener('click', () => {
-            const classId = card.getAttribute('data-class');
-            currentSelectedClass = classId;
-            renderizarTurmasDocente();
-          });
-        });
-
-        // Escutar cliques na sidebar de turmas
-        document.querySelectorAll('.btn-sidebar').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const classId = btn.getAttribute('data-class');
-            currentSelectedClass = classId;
-            renderizarTurmasDocente();
-          });
-        });
+        };
+        document.querySelector('#panel-docente nav').addEventListener('click', selectClass);
+        document.getElementById('teacher-class-cards').addEventListener('click', selectClass);
 
         // Botão voltar na turma
         const btnBack = document.getElementById('btn-back-to-classes');
@@ -1099,50 +1002,53 @@
           });
         }
 
+        const studentsGrid = document.getElementById('students-grid-container');
+        studentsGrid.addEventListener('click', (e) => {
+          const emotionBtn = e.target.closest('.emotion-btn');
+          if (emotionBtn) {
+            alternarEmocao(emotionBtn);
+            return;
+          }
+          const openBtn = e.target.closest('.btn-open-modal');
+          if (openBtn) abrirModalEstudante(Number(openBtn.getAttribute('data-student-id')));
+        });
+
         inicializarModalEStt();
+        inicializarEncaminhamentoDocente();
       }
 
       // --- DADOS E FUNÇÕES DE CAPACITAÇÃO DOCENTE (Track 02) ---
-      const materiaisIniciais = [
-        {
-          id: "mat-01",
-          titulo: "Protocolo de Acolhimento em Saúde Mental na Escola",
-          tipo: "pdf",
-          data: "25/07/2026 10:30",
-          link: "",
-          destinatarios: ["1a", "1b", "2a", "2b"],
-          lidoPor: ["docente@ampara.gov.br"]
-        },
-        {
-          id: "mat-02",
-          titulo: "Vídeo-aula: Técnicas de Desescalada de Crises de Pânico",
-          tipo: "video",
-          data: "28/07/2026 14:15",
-          link: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-          destinatarios: ["1a", "2a"],
-          lidoPor: []
-        }
-      ];
-
-      function obterClasseDoProfessorLogado() {
-        const user = JSON.parse(sessionStorage.getItem("usuarioLogado")) || { email: "professor@ampara.gov.br" };
-        const email = user.email;
-        if (email === "marcos.rocha@ampara.gov.br") return "1b";
-        if (email === "carla.lima@ampara.gov.br") return "2a";
-        if (email === "juliano.souza@ampara.gov.br") return "2b";
-        return "1a"; // default para professor de testes
+      function lerMateriais() {
+        try { return JSON.parse(localStorage.getItem('materiaisCapacitacao')) || []; }
+        catch (e) { return []; }
       }
 
       function renderizarMateriaisCoordenador() {
         const container = document.getElementById('shared-materials-coor-container');
         if (!container) return;
+        // Class names come from the roster; a failed load still lists the materials.
+        loadTurmas().catch(() => []).then(() => {
+          renderizarDestinatarios();
+          desenharMateriaisCoordenador(container);
+        });
+      }
 
-        let materiais = JSON.parse(localStorage.getItem('materiaisCapacitacao'));
-        if (!materiais) {
-          materiais = materiaisIniciais;
-          localStorage.setItem('materiaisCapacitacao', JSON.stringify(materiais));
+      function renderizarDestinatarios() {
+        const box = document.getElementById('share-destinatarios-container');
+        if (!turmasCache.length) {
+          box.innerHTML = '<span style="font-size: 0.88rem; color: var(--muted);">Nenhuma turma cadastrada.</span>';
+          return;
         }
+        box.innerHTML = turmasCache.map(t => `
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; margin: 0;">
+            <input type="checkbox" name="destinatarios" value="${t.id}" style="margin: 0;" />
+            <span>🏫 ${escapeHtml(t.nome)}</span>
+          </label>
+        `).join('');
+      }
 
+      function desenharMateriaisCoordenador(container) {
+        const materiais = lerMateriais();
         container.innerHTML = '';
 
         if (materiais.length === 0) {
@@ -1154,13 +1060,6 @@
           return;
         }
 
-        const classNameMap = {
-          "1a": "1º Ano A",
-          "1b": "1º Ano B",
-          "2a": "2º Ano A",
-          "2b": "2º Ano B"
-        };
-
         materiais.forEach(mat => {
           const totalDestinatarios = mat.destinatarios.length;
           const lidosCount = mat.lidoPor.length;
@@ -1169,7 +1068,7 @@
           card.className = 'form-card';
           card.style.cssText = 'padding: 16px 20px; border-radius: var(--radius-sm); border-color: var(--border); margin-bottom: 0; background: var(--card-inset);';
 
-          const targetsText = mat.destinatarios.map(id => classNameMap[id] || id).join(', ');
+          const targetsText = mat.destinatarios.map(id => escapeHtml(turmaNome(id) || id)).join(', ');
 
           card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
@@ -1195,15 +1094,13 @@
       function renderizarMateriaisProfessor() {
         const container = document.getElementById('received-materials-prof-container');
         if (!container) return;
+        loadTurmas().catch(() => []).then(() => desenharMateriaisProfessor(container));
+      }
 
-        let materiais = JSON.parse(localStorage.getItem('materiaisCapacitacao'));
-        if (!materiais) {
-          materiais = materiaisIniciais;
-          localStorage.setItem('materiaisCapacitacao', JSON.stringify(materiais));
-        }
-
-        const classId = obterClasseDoProfessorLogado();
-        const materiaisDestinados = materiais.filter(mat => mat.destinatarios.includes(classId));
+      function desenharMateriaisProfessor(container) {
+        // Until teachers are assigned to classes (todo/0013), a teacher receives what was sent to any class.
+        const classIds = turmasCache.map(t => String(t.id));
+        const materiaisDestinados = lerMateriais().filter(mat => mat.destinatarios.some(id => classIds.includes(String(id))));
 
         container.innerHTML = '';
 
@@ -1216,8 +1113,7 @@
           return;
         }
 
-        const user = JSON.parse(sessionStorage.getItem("usuarioLogado")) || { email: "professor@ampara.gov.br" };
-        const userEmail = user.email;
+        const userEmail = usuarioDaSessao().email;
 
         materiaisDestinados.forEach(mat => {
           const jaLido = mat.lidoPor.includes(userEmail);
@@ -1390,61 +1286,94 @@
 
         if (currentSelectedClass === "all") {
           classGrid.style.display = "block";
-          setActiveSidebarButton("btn-sidebar-all");
+          renderizarCardsDeTurmas();
         } else if (currentSelectedClass === "capacitacao") {
           if (panelCapacitacao) {
             panelCapacitacao.style.display = "block";
             renderizarMateriaisProfessor();
           }
-          setActiveSidebarButton("btn-sidebar-capacitacao");
         } else {
           classDetails.style.display = "block";
           renderizarDetalhesTurma(currentSelectedClass);
-          setActiveSidebarButton(`btn-sidebar-${currentSelectedClass}`);
         }
+        setActiveSidebarButton();
       }
 
-      function setActiveSidebarButton(id) {
+      function setActiveSidebarButton() {
         document.querySelectorAll('.btn-sidebar').forEach(btn => {
-          btn.classList.remove('active');
-          if (btn.id === id || btn.getAttribute('data-class') === currentSelectedClass) {
-            btn.classList.add('active');
-          }
+          btn.classList.toggle('active', btn.getAttribute('data-class') === String(currentSelectedClass));
         });
+      }
+
+      function renderizarCardsDeTurmas() {
+        const sidebar = document.getElementById('sidebar-class-list');
+        const cards = document.getElementById('teacher-class-cards');
+        return loadTurmas()
+          .then(turmas => {
+            sidebar.innerHTML = turmas.map(t => `
+              <button type="button" class="btn-sidebar" data-class="${t.id}">🏫 ${escapeHtml(t.nome)}</button>
+            `).join('');
+            if (!turmas.length) {
+              cards.innerHTML = '<div class="empty-state">Nenhuma turma cadastrada na escola ainda.</div>';
+              return;
+            }
+            cards.innerHTML = turmas.map(t => `
+              <button type="button" class="form-card class-select-card" data-class="${t.id}" style="cursor: pointer; padding: 24px; transition: transform 0.15s, border-color 0.15s; margin-bottom: 0; width: 100%; text-align: left; font: inherit; color: inherit;">
+                <div style="font-size: 2.2rem; margin-bottom: 12px;" aria-hidden="true">🏫</div>
+                <h3 style="margin: 0 0 6px; font-size: 1.3rem;">${escapeHtml(t.nome)}</h3>
+                <p style="margin: 0; font-size: 0.88rem; color: var(--muted);"><strong style="color: var(--navy);">${t.total_estudantes}</strong> ${estudantesLabel(t.total_estudantes)}</p>
+              </button>
+            `).join('');
+            setActiveSidebarButton();
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') cards.innerHTML = '<div class="empty-state">Não foi possível carregar as turmas. Tente novamente.</div>';
+          });
       }
 
       function renderizarDetalhesTurma(classId) {
         const titleEl = document.getElementById('selected-class-title');
         const gridContainer = document.getElementById('students-grid-container');
-        
-        const classNameMap = {
-          "1a": "1º Ano A",
-          "1b": "1º Ano B",
-          "2a": "2º Ano A",
-          "2b": "2º Ano B"
-        };
-        
-        titleEl.textContent = `Turma: ${classNameMap[classId]}`;
+
+        titleEl.textContent = `Turma: ${turmaNome(classId) || '—'}`;
+        gridContainer.innerHTML = '<div class="empty-state">Carregando estudantes...</div>';
+
+        return loadEstudantes({ turma_id: classId })
+          .then(students => {
+            // A slower response for a class the teacher already left must not overwrite the current one.
+            if (String(currentSelectedClass) !== String(classId)) return;
+            currentClassStudents = students;
+            renderizarCardsDeEstudantes();
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') gridContainer.innerHTML = '<div class="empty-state">Não foi possível carregar os estudantes. Tente novamente.</div>';
+          });
+      }
+
+      const EMOTIONS = [
+        { key: "ansiedade", label: "😰 Ansiedade" },
+        { key: "tristeza", label: "😢 Tristeza" },
+        { key: "agitacao", label: "⚡ Agitação" },
+        { key: "apatia", label: "😐 Apatia" },
+        { key: "euforia", label: "🌟 Euforia" }
+      ];
+
+      function renderizarCardsDeEstudantes() {
+        const gridContainer = document.getElementById('students-grid-container');
+        if (!currentClassStudents.length) {
+          gridContainer.innerHTML = '<div class="empty-state">Nenhum estudante cadastrado nesta turma.</div>';
+          return;
+        }
         gridContainer.innerHTML = '';
-        
-        const students = mockStudents[classId] || [];
-        students.forEach(student => {
+        currentClassStudents.forEach(student => {
           const card = document.createElement('div');
           card.className = 'student-card';
           
-          const emotions = [
-            { key: "ansiedade", label: "😰 Ansiedade" },
-            { key: "tristeza", label: "😢 Tristeza" },
-            { key: "agitacao", label: "⚡ Agitação" },
-            { key: "apatia", label: "😐 Apatia" },
-            { key: "euforia", label: "🌟 Euforia" }
-          ];
-          
           let emotionsHtml = '<div class="emotion-badge-group" role="group" aria-label="Estados emocionais ativos">';
-          emotions.forEach(emo => {
+          EMOTIONS.forEach(emo => {
             const isActive = student.activeEmotions.includes(emo.key);
             emotionsHtml += `
-              <button type="button" class="emotion-btn ${isActive ? 'active' : ''}" data-emotion="${emo.key}" data-student-id="${student.id}" data-class-id="${classId}">
+              <button type="button" class="emotion-btn ${isActive ? 'active' : ''}" data-emotion="${emo.key}" data-student-id="${student.id}">
                 ${emo.label}
               </button>
             `;
@@ -1453,54 +1382,44 @@
           
           card.innerHTML = `
             <div style="display: flex; gap: 14px; align-items: center; margin-bottom: 12px;">
-              <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--lavender); color: var(--navy-dark); display: grid; place-items: center; font-weight: 700; font-size: 1.1rem; flex: none; border: 1px solid var(--border-strong);">
-                ${student.nome.charAt(0)}
+              <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--lavender); color: var(--navy-dark); display: grid; place-items: center; font-weight: 700; font-size: 1.1rem; flex: none; border: 1px solid var(--border-strong);" aria-hidden="true">
+                ${escapeHtml(student.nome.charAt(0))}
               </div>
               <div>
-                <strong style="display: block; font-size: 1rem; color: var(--ink-soft);">${student.nome}</strong>
-                <span style="font-size: 0.8rem; color: var(--muted);">ID: ${student.matricula}</span>
+                <strong style="display: block; font-size: 1rem; color: var(--ink-soft);">${escapeHtml(student.nome)}</strong>
+                <span style="font-size: 0.8rem; color: var(--muted);">ID: ${escapeHtml(student.matricula)}</span>
               </div>
             </div>
             
             <span style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 800; color: var(--muted);">Sintomas Observados</span>
             ${emotionsHtml}
             
-            <button type="button" class="btn btn-primary btn-open-modal" data-student-id="${student.id}" data-class-id="${classId}" style="width: 100%; padding: 10px; font-size: 0.88rem; font-weight: 700;">
+            <button type="button" class="btn btn-primary btn-open-modal" data-student-id="${student.id}" style="width: 100%; padding: 10px; font-size: 0.88rem; font-weight: 700;">
               Registrar Observação
             </button>
           `;
           
           gridContainer.appendChild(card);
         });
-        
-        vincularTogglesEmocao();
-        vincularAberturaModal();
       }
 
-      function vincularTogglesEmocao() {
-        document.querySelectorAll('.emotion-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const studentId = parseInt(btn.getAttribute('data-student-id'));
-            const classId = btn.getAttribute('data-class-id');
-            const emotion = btn.getAttribute('data-emotion');
-            
-            const student = mockStudents[classId].find(s => s.id === studentId);
-            if (student) {
-              const idx = student.activeEmotions.indexOf(emotion);
-              if (idx > -1) {
-                student.activeEmotions.splice(idx, 1);
-                btn.classList.remove('active');
-                if (typeof toast === 'function') toast(`Sintoma de "${emotion}" removido para ${student.nome.split(' ')[0]}.`);
-              } else {
-                student.activeEmotions.push(emotion);
-                btn.classList.add('active');
-                if (typeof toast === 'function') toast(`Sintoma de "${emotion}" ativado para ${student.nome.split(' ')[0]}!`);
-              }
-            }
-          });
-        });
+      function alternarEmocao(btn) {
+        const student = studentsById.get(Number(btn.getAttribute('data-student-id')));
+        const emotion = btn.getAttribute('data-emotion');
+        if (!student) return;
+        const idx = student.activeEmotions.indexOf(emotion);
+        if (idx > -1) {
+          student.activeEmotions.splice(idx, 1);
+          btn.classList.remove('active');
+          toast(`Sintoma de "${emotion}" removido para ${student.nome.split(' ')[0]}.`);
+        } else {
+          student.activeEmotions.push(emotion);
+          btn.classList.add('active');
+          toast(`Sintoma de "${emotion}" ativado para ${student.nome.split(' ')[0]}!`);
+        }
       }
+
+      let fecharModalEstudante = () => {};
 
       function inicializarModalEStt() {
         const modal = document.getElementById('student-modal');
@@ -1513,17 +1432,7 @@
 
         if (!modal || !btnCloseModal || !formBehavior || !voiceBtn || !descInput) return;
 
-        btnCloseModal.addEventListener('click', () => {
-          modal.style.display = "none";
-          activeStudentForModal = null;
-        });
-
-        window.addEventListener('click', (e) => {
-          if (e.target === modal) {
-            modal.style.display = "none";
-            activeStudentForModal = null;
-          }
-        });
+        fecharModalEstudante = bindDialog(modal, btnCloseModal, () => { activeStudentForModal = null; });
 
         // Contador de caracteres dinâmico (Track 04)
         if (charCounter) {
@@ -1612,11 +1521,7 @@
 
           // Validação Obrigatória do Tipo de Comportamento
           if (!behaviorType) {
-            if (typeof toast === 'function') {
-              toast("Por favor, selecione o tipo de comportamento.");
-            } else {
-              alert("Por favor, selecione o tipo de comportamento.");
-            }
+            toast("Por favor, selecione o tipo de comportamento.");
             if (typeSelect) typeSelect.focus();
             return;
           }
@@ -1627,11 +1532,11 @@
           const now = new Date();
           const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
           
-          const { student, classId } = activeStudentForModal;
+          const { student } = activeStudentForModal;
 
           // Autor automático
-          const user = JSON.parse(sessionStorage.getItem("usuarioLogado")) || { nome: "Ana Silva", perfil: "docente" };
-          const authorName = `Prof. ${user.nome || "Ana Silva"} (${user.perfil === 'docente' ? 'Docente' : 'Coordenação'})`;
+          const user = usuarioDaSessao();
+          const authorName = `Prof. ${user.nome} (${user.perfil === 'docente' ? 'Docente' : 'Coordenação'})`;
 
           const behaviorLabel = typeSelect ? typeSelect.options[typeSelect.selectedIndex].text : "Comportamento";
           
@@ -1647,57 +1552,92 @@
           
           student.logs.unshift(newLog);
           
-          if (typeof toast === 'function') {
-            toast(`Registro comportamental salvo com sucesso para ${student.nome.split(' ')[0]}!`);
-          } else {
-            alert(`Registro comportamental salvo com sucesso para ${student.nome.split(' ')[0]}!`);
-          }
-          
-          modal.style.display = "none";
-          activeStudentForModal = null;
-          
-          // Rerenderizar
-          renderizarDetalhesTurma(classId);
+          toast(`Registro comportamental salvo com sucesso para ${student.nome.split(' ')[0]}!`);
+          fecharModalEstudante();
         });
       }
 
-      function vincularAberturaModal() {
+      function abrirModalEstudante(studentId) {
         const modal = document.getElementById('student-modal');
         const descInput = document.getElementById('behavior-description');
         const studentNameInput = document.getElementById('behavior-student-name');
         const typeSelect = document.getElementById('behavior-type');
         const charCounter = document.getElementById('char-counter');
 
-        document.querySelectorAll('.btn-open-modal').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const studentId = parseInt(btn.getAttribute('data-student-id'));
-            const classId = btn.getAttribute('data-class-id');
-            
-            const student = mockStudents[classId].find(s => s.id === studentId);
-            if (student) {
-              activeStudentForModal = { student, classId };
-              
-              document.getElementById('modal-student-name').textContent = student.nome;
-              document.getElementById('modal-student-matricula').textContent = `Matrícula: ${student.matricula}`;
-              
-              // Resetar e preencher campos do formulário (Track 04)
-              if (studentNameInput) studentNameInput.value = student.nome;
-              if (typeSelect) typeSelect.value = '';
-              descInput.value = '';
-              if (charCounter) {
-                charCounter.textContent = '0 / 500 caracteres';
-                charCounter.style.color = "var(--muted)";
-                charCounter.style.fontWeight = "normal";
-              }
+        const student = studentsById.get(studentId);
+        if (!student) return;
+        activeStudentForModal = { student };
+        
+        document.getElementById('modal-student-name').textContent = student.nome;
+        document.getElementById('modal-student-matricula').textContent = `Matrícula: ${student.matricula}`;
+        
+        // Resetar e preencher campos do formulário (Track 04)
+        if (studentNameInput) studentNameInput.value = student.nome;
+        if (typeSelect) typeSelect.value = '';
+        descInput.value = '';
+        if (charCounter) {
+          charCounter.textContent = '0 / 500 caracteres';
+          charCounter.style.color = "var(--muted)";
+          charCounter.style.fontWeight = "normal";
+        }
 
-              document.querySelector('input[name="severity"][value="low"]').checked = true;
-              
-              renderizarLinhaDoTempo(student.logs);
-              
-              modal.style.display = "flex";
-              if (typeSelect) typeSelect.focus();
-            }
-          });
+        document.querySelector('input[name="severity"][value="low"]').checked = true;
+        fecharFormularioEncaminhamento();
+        
+        renderizarLinhaDoTempo(student.logs);
+        
+        openDialog(modal, typeSelect);
+      }
+
+      // --- ENCAMINHAMENTO PELO PROFESSOR (POST /api/encaminhamentos) ---
+      function fecharFormularioEncaminhamento() {
+        const form = document.getElementById('referral-form');
+        form.reset();
+        form.hidden = true;
+        document.getElementById('btn-open-referral').setAttribute('aria-expanded', 'false');
+      }
+
+      function inicializarEncaminhamentoDocente() {
+        const openBtn = document.getElementById('btn-open-referral');
+        const form = document.getElementById('referral-form');
+        const motivoInput = document.getElementById('referral-motivo');
+        const submitBtn = document.getElementById('btn-submit-referral');
+
+        openBtn.addEventListener('click', () => {
+          form.hidden = false;
+          openBtn.setAttribute('aria-expanded', 'true');
+          motivoInput.focus();
+        });
+
+        document.getElementById('btn-cancel-referral').addEventListener('click', () => {
+          fecharFormularioEncaminhamento();
+          openBtn.focus();
+        });
+
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (!activeStudentForModal) return;
+          const motivo = motivoInput.value.trim();
+          if (!motivo) {
+            toast('Descreva o motivo do encaminhamento.');
+            motivoInput.focus();
+            return;
+          }
+          submitBtn.disabled = true;
+          jsonRequest('POST', '/api/encaminhamentos', { estudante_id: activeStudentForModal.student.id, motivo: motivo })
+            .then(data => {
+              if (!data.sucesso) {
+                toast(data.mensagem || 'Não foi possível registrar o encaminhamento.');
+                return;
+              }
+              toast(data.mensagem || 'Encaminhamento registrado com sucesso.');
+              fecharFormularioEncaminhamento();
+              openBtn.focus();
+            })
+            .catch(err => {
+              if (err.message !== 'Unauthorized') toast('Erro ao conectar ao servidor.');
+            })
+            .then(() => { submitBtn.disabled = false; });
         });
       }
 
@@ -1803,68 +1743,26 @@
           });
         }
 
-        // Inicializar materiais do Coordenador se estiver na aba ativa
-        renderizarMateriaisCoordenador();
-
-        // --- SUB-ABA 1: ADICIONAR PROFESSOR MANUALMENTE ---
-        const btnOpenAddTeacher = document.getElementById('btn-open-add-teacher');
-        const addTeacherModal = document.getElementById('add-teacher-modal');
-        const btnCloseAddTeacher = document.getElementById('btn-close-add-teacher-modal');
-        const formAddTeacher = document.getElementById('form-add-teacher');
-
-        if (btnOpenAddTeacher && addTeacherModal && btnCloseAddTeacher && formAddTeacher) {
-          btnOpenAddTeacher.addEventListener('click', () => {
-            addTeacherModal.style.display = "flex";
-            document.getElementById('add-teacher-nome').focus();
-          });
-
-          btnCloseAddTeacher.addEventListener('click', () => {
-            addTeacherModal.style.display = "none";
-          });
-
-          addTeacherModal.addEventListener('click', (e) => {
-            if (e.target === addTeacherModal) addTeacherModal.style.display = "none";
-          });
-
-          formAddTeacher.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const nome = document.getElementById('add-teacher-nome').value.trim();
-            const email = document.getElementById('add-teacher-email').value.trim();
-            const escola = document.getElementById('add-teacher-escola').value.trim();
-
-            if (!nome || !email || !escola) {
-              if (typeof toast === 'function') toast("Por favor, preencha todos os campos.");
-              return;
-            }
-
-            // Criar e inserir novo professor na lista em cache
-            const novoProf = {
-              id: Date.now(),
-              nome: nome,
-              email: email,
-              perfil: "docente",
-              escola: escola,
-              validado: true // Acesso imediato ativado!
-            };
-
-            cachedUsuarios.unshift(novoProf); // Prepend
-            renderizarUsuarios(cachedUsuarios);
-
-            addTeacherModal.style.display = "none";
-            formAddTeacher.reset();
-
-            if (typeof toast === 'function') {
-              toast(`Professor ${nome.split(' ')[0]} cadastrado com acesso ativo!`);
-            }
-          });
-        }
+        document.getElementById('users-tbody').addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-aprovar');
+          if (btn) aprovarCadastro(btn);
+        });
 
         // --- SUB-ABA 2: BUSCA REAL-TIME EM TURMAS E ESTUDANTES ---
         const classesInput = document.getElementById('search-classes-input');
         const studentsInput = document.getElementById('search-students-input');
 
         if (classesInput) classesInput.addEventListener('input', executarBuscaClasses);
-        if (studentsInput) studentsInput.addEventListener('input', executarBuscaEstudantes);
+        if (studentsInput) studentsInput.addEventListener('input', agendarBuscaEstudantes);
+
+        document.getElementById('search-classes-results-container').addEventListener('click', (e) => {
+          const toggle = e.target.closest('.search-class-toggle');
+          if (toggle) alternarRosterDaTurma(toggle);
+        });
+        document.getElementById('search-students-results-container').addEventListener('click', (e) => {
+          const btn = e.target.closest('.btn-ver-prontuario');
+          if (btn) abrirLinhaDeTempoBusca(studentsById.get(Number(btn.getAttribute('data-student-id'))));
+        });
 
         // Fechar Prontuário Comportamental
         const btnCloseTimeline = document.getElementById('btn-close-search-timeline');
@@ -1883,14 +1781,7 @@
 
         if (btnOpenOccCentral && occModal && btnCloseOccModal && formOcc && targetTypeSelect) {
           btnOpenOccCentral.addEventListener('click', () => abrirModalOcorrencia());
-          
-          btnCloseOccModal.addEventListener('click', () => {
-            occModal.style.display = "none";
-          });
-
-          occModal.addEventListener('click', (e) => {
-            if (e.target === occModal) occModal.style.display = "none";
-          });
+          bindDialog(occModal, btnCloseOccModal);
 
           // Trocar dinamicamente campos de classe vs estudante
           targetTypeSelect.addEventListener('change', () => {
@@ -1926,7 +1817,7 @@
                 return;
               }
               targetName = studentSelect.options[studentSelect.selectedIndex].text;
-              studentTargetId = parseInt(studentSelect.value);
+              studentTargetId = Number(studentSelect.value);
             } else {
               const classSelect = document.getElementById('occurrence-target-class');
               if (!classSelect.value) {
@@ -1957,23 +1848,17 @@
             // Prepend a central ocorrências
             localOccurrences.unshift(novaOcorrencia);
 
-            // Injetar anotação da coordenação diretamente nos logs de Lucas/outros se for Estudante
-            if (targetType === 'student' && studentTargetId) {
-              // Buscar o estudante nas turmas do banco local
-              for (const clId in mockStudents) {
-                const foundStud = mockStudents[clId].find(s => s.id === studentTargetId);
-                if (foundStud) {
-                  foundStud.logs.unshift({
-                    date: formattedDate,
-                    severity: "high", // Ação da coordenação sempre é tratada como alta gravidade/auditoria
-                    text: `[OCORRÊNCIA COORDENAÇÃO - ${type}] Intervenção: ${action}. Descrição: ${desc}`
-                  });
-                  break;
-                }
-              }
+            // Student occurrences also show up in the student's in-memory timeline.
+            const foundStud = studentTargetId && studentsById.get(studentTargetId);
+            if (foundStud) {
+              foundStud.logs.unshift({
+                date: formattedDate,
+                severity: "high", // Ação da coordenação sempre é tratada como alta gravidade/auditoria
+                text: `[OCORRÊNCIA COORDENAÇÃO - ${type}] Intervenção: ${action}. Descrição: ${desc}`
+              });
             }
 
-            occModal.style.display = "none";
+            closeDialog(occModal);
             formOcc.reset();
             targetTypeSelect.value = "student";
             document.getElementById('occurrence-target-student-field').style.display = "block";
@@ -1985,138 +1870,142 @@
         }
       }
 
-      function abrirModalOcorrencia() {
-        const modal = document.getElementById('occurrence-modal');
-        if (modal) {
-          modal.style.display = "flex";
-          document.getElementById('occurrence-type').focus();
+      let ocorrenciaSelectsPromise = null;
+
+      function preencherSelectsOcorrencia() {
+        if (!ocorrenciaSelectsPromise) {
+          ocorrenciaSelectsPromise = Promise.all([loadTurmas(), loadEstudantes()]).then(([turmas, estudantes]) => {
+            const studentSelect = document.getElementById('occurrence-target-student');
+            const classSelect = document.getElementById('occurrence-target-class');
+            studentSelect.innerHTML = '<option value="" disabled selected>Selecione o estudante...</option>' + estudantes.map(e =>
+              `<option value="${e.id}">${escapeHtml(e.nome)}${e.turma ? ` (${escapeHtml(e.turma.nome)})` : ''}</option>`
+            ).join('');
+            classSelect.innerHTML = '<option value="" disabled selected>Selecione a turma...</option>' + turmas.map(t =>
+              `<option value="${t.id}">${escapeHtml(t.nome)}</option>`
+            ).join('');
+          });
+          ocorrenciaSelectsPromise.catch(err => {
+            ocorrenciaSelectsPromise = null;
+            if (err.message !== 'Unauthorized') toast('Não foi possível carregar turmas e estudantes.');
+          });
         }
+        return ocorrenciaSelectsPromise;
       }
 
-      // --- BUSCA DINÂMICA DE TURMAS (REAL-TIME) ---
+      function abrirModalOcorrencia() {
+        const modal = document.getElementById('occurrence-modal');
+        if (!modal) return;
+        openDialog(modal, document.getElementById('occurrence-type'));
+        preencherSelectsOcorrencia().catch(() => {});
+      }
+
+      // --- BUSCA DINÂMICA DE TURMAS ---
       function executarBuscaClasses() {
         const query = (document.getElementById('search-classes-input').value || "").toLowerCase().trim();
         const container = document.getElementById('search-classes-results-container');
         if (!container) return;
 
-        container.innerHTML = '';
-
-        const classNameMap = {
-          "1a": "1º Ano A",
-          "1b": "1º Ano B",
-          "2a": "2º Ano A",
-          "2b": "2º Ano B"
-        };
-
-        let totalRenders = 0;
-
-        for (const clId in mockStudents) {
-          const className = classNameMap[clId];
-          if (query && !className.toLowerCase().includes(query)) continue;
-
-          const students = mockStudents[clId];
-          const hasAlerts = students.some(s => s.activeEmotions.length > 0);
-
-          const item = document.createElement('div');
-          item.className = 'search-item-box';
-          item.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div>
-                <strong style="font-size: 1.05rem; color: var(--navy-dark); display: block;">🏫 ${className}</strong>
-                <span style="font-size: 0.82rem; color: var(--muted);">${students.length} estudantes · Coordenador: Prof. Designado</span>
-              </div>
-              <div>
-                <span class="status-badge ${hasAlerts ? 'pending' : 'approved'}" style="font-size: 0.72rem;">
-                  <span class="dot"></span> ${hasAlerts ? 'Alertas de Sintomas' : 'Normal / Estável'}
-                </span>
-              </div>
-            </div>
-            <div class="roster-collapsed" id="search-roster-${clId}" style="display: none; border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px;">
-              <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 8px;">Lista de Estudantes</strong>
-              <div style="display: flex; flex-direction: column; gap: 6px;">
-                ${students.map(s => `
-                  <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding: 4px 0;">
-                    <span>🎓 ${s.nome}</span>
-                    <span style="color: var(--muted); font-size: 0.8rem;">${s.activeEmotions.length > 0 ? `😰 ${s.activeEmotions.length} ativos` : 'Estável'}</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          `;
-
-          // Clique no card de turmas expande a lista de alunos
-          item.addEventListener('click', () => {
-            const roster = document.getElementById(`search-roster-${clId}`);
-            if (roster.style.display === "none") {
-              roster.style.display = "block";
-            } else {
-              roster.style.display = "none";
+        return loadTurmas()
+          .then(turmas => {
+            const encontradas = turmas.filter(t => !query || t.nome.toLowerCase().includes(query));
+            if (!encontradas.length) {
+              container.innerHTML = '';
+              const vazio = document.createElement('div');
+              vazio.style.cssText = 'text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;';
+              vazio.textContent = query ? `Nenhuma turma encontrada para "${query}".` : 'Nenhuma turma cadastrada.';
+              container.appendChild(vazio);
+              return;
             }
+            container.innerHTML = encontradas.map(t => `
+              <div class="search-item-box" data-turma-id="${t.id}">
+                <button type="button" class="search-class-toggle" aria-expanded="false" aria-controls="search-roster-${t.id}" style="all: unset; display: flex; justify-content: space-between; align-items: center; width: 100%; cursor: pointer;">
+                  <span>
+                    <strong style="font-size: 1.05rem; color: var(--navy-dark); display: block;">🏫 ${escapeHtml(t.nome)}</strong>
+                    <span style="font-size: 0.82rem; color: var(--muted);">${t.total_estudantes} ${estudantesLabel(t.total_estudantes)} · Turno ${escapeHtml(t.turno)}</span>
+                  </span>
+                </button>
+                <div class="roster-collapsed" id="search-roster-${t.id}" hidden style="border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px;"></div>
+              </div>
+            `).join('');
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') container.innerHTML = '<div style="text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;">Não foi possível carregar as turmas.</div>';
           });
-
-          container.appendChild(item);
-          totalRenders++;
-        }
-
-        if (totalRenders === 0) {
-          container.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;">Nenhuma turma encontrada para "${query}".</div>`;
-        }
       }
 
-      // --- BUSCA DINÂMICA DE ESTUDANTES (REAL-TIME) ---
+      function alternarRosterDaTurma(toggle) {
+        const box = toggle.closest('[data-turma-id]');
+        const roster = box.querySelector('.roster-collapsed');
+        const abrir = roster.hidden;
+        roster.hidden = !abrir;
+        toggle.setAttribute('aria-expanded', abrir ? 'true' : 'false');
+        if (!abrir) return;
+        roster.innerHTML = '<span style="font-size: 0.85rem; color: var(--muted);">Carregando estudantes...</span>';
+        loadEstudantes({ turma_id: box.getAttribute('data-turma-id') })
+          .then(estudantes => {
+            roster.innerHTML = `
+              <strong style="font-size: 0.8rem; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 8px;">Lista de Estudantes</strong>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                ${estudantes.length ? estudantes.map(s => `
+                  <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding: 4px 0;">
+                    <span>🎓 ${escapeHtml(s.nome)}</span>
+                    <span style="color: var(--muted); font-size: 0.8rem;">${escapeHtml(s.matricula)}</span>
+                  </div>
+                `).join('') : '<span style="font-size: 0.85rem; color: var(--muted);">Nenhum estudante cadastrado nesta turma.</span>'}
+              </div>
+            `;
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') roster.innerHTML = '<span style="font-size: 0.85rem; color: var(--muted);">Não foi possível carregar os estudantes.</span>';
+          });
+      }
+
+      // --- BUSCA DINÂMICA DE ESTUDANTES ---
+      let buscaEstudantesTimer = null;
+      let buscaEstudantesSeq = 0;
+
+      function agendarBuscaEstudantes() {
+        clearTimeout(buscaEstudantesTimer);
+        buscaEstudantesTimer = setTimeout(executarBuscaEstudantes, 300);
+      }
+
       function executarBuscaEstudantes() {
-        const query = (document.getElementById('search-students-input').value || "").toLowerCase().trim();
+        const query = (document.getElementById('search-students-input').value || "").trim();
         const container = document.getElementById('search-students-results-container');
         if (!container) return;
+        const seq = ++buscaEstudantesSeq;
 
-        container.innerHTML = '';
-
-        const classNameMap = {
-          "1a": "1º Ano A",
-          "1b": "1º Ano B",
-          "2a": "2º Ano A",
-          "2b": "2º Ano B"
-        };
-
-        let totalRenders = 0;
-
-        for (const clId in mockStudents) {
-          const className = classNameMap[clId];
-          const students = mockStudents[clId];
-
-          students.forEach(s => {
-            const matchesQuery = !query || s.nome.toLowerCase().includes(query) || s.matricula.includes(query);
-            if (!matchesQuery) return;
-
-            const item = document.createElement('div');
-            item.className = 'search-item-box';
-            item.innerHTML = `
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <strong style="font-size: 1.05rem; color: var(--navy-dark); display: block;">🎓 ${s.nome}</strong>
-                  <span style="font-size: 0.82rem; color: var(--muted);">Matrícula: ${s.matricula} · Turma: ${className}</span>
-                </div>
-                <div>
-                  <button type="button" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.78rem; font-weight: 700; background: var(--sage-badge); color: var(--sage-badge-tx); border-color: var(--sage);">
+        return loadEstudantes(query ? { q: query } : {})
+          .then(estudantes => {
+            // Typing fires several searches; only the latest one may render.
+            if (seq !== buscaEstudantesSeq) return;
+            if (!estudantes.length) {
+              container.innerHTML = '';
+              const vazio = document.createElement('div');
+              vazio.style.cssText = 'text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;';
+              vazio.textContent = query ? `Nenhum estudante encontrado para "${query}".` : 'Nenhum estudante cadastrado.';
+              container.appendChild(vazio);
+              return;
+            }
+            container.innerHTML = estudantes.map(s => `
+              <div class="search-item-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                  <div>
+                    <strong style="font-size: 1.05rem; color: var(--navy-dark); display: block;">🎓 ${escapeHtml(s.nome)}</strong>
+                    <span style="font-size: 0.82rem; color: var(--muted);">Matrícula: ${escapeHtml(s.matricula)} · Turma: ${escapeHtml(s.turma ? s.turma.nome : '—')}</span>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-ver-prontuario" data-student-id="${s.id}" style="padding: 6px 12px; font-size: 0.78rem; font-weight: 700; background: var(--sage-badge); color: var(--sage-badge-tx); border-color: var(--sage);">
                     📁 Ver Prontuário
                   </button>
                 </div>
               </div>
-            `;
-
-            // Clicar no estudante abre a linha de tempo abaixo
-            item.addEventListener('click', () => {
-              abrirLinhaDeTempoBusca(s);
-            });
-
-            container.appendChild(item);
-            totalRenders++;
+            `).join('');
+          })
+          .catch(err => {
+            if (seq === buscaEstudantesSeq && err.message !== 'Unauthorized') {
+              container.innerHTML = '<div style="text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;">Não foi possível carregar os estudantes.</div>';
+            }
           });
-        }
-
-        if (totalRenders === 0) {
-          container.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 12px; font-size: 0.88rem;">Nenhum estudante encontrado para "${query}".</div>`;
-        }
       }
 
       // --- FILTRAGEM DE HISTÓRICO COM AUTORES (Track 03) ---
@@ -2235,6 +2124,7 @@
       }
 
       function abrirLinhaDeTempoBusca(student) {
+        if (!student) return;
         const box = document.getElementById('search-student-timeline-box');
         const nameEl = document.getElementById('search-timeline-student-name');
         const idEl = document.getElementById('search-timeline-student-id');
@@ -2866,66 +2756,43 @@
         }
       }
 
+      function usuarioDaSessao() {
+        try { return JSON.parse(sessionStorage.getItem('usuarioLogado')); }
+        catch (e) { return null; }
+      }
+
       // Iniciar
       document.addEventListener('DOMContentLoaded', () => {
+        const usuario = usuarioDaSessao();
+        const role = usuario && localStorage.getItem('token') ? PERFIL_ROLES[usuario.perfil] : null;
+        if (!role) {
+          window.location.href = '/login';
+          return;
+        }
+
+        document.getElementById('btn-logout').addEventListener('click', logout);
         inicializarNavegacaoGlobalEBiblioteca();
-        inicializarCompartilhamentoDeMateriais();
         inicializarFiltrosLinhaTempo();
         initReferralQueue();
-        const usuarioLogado = JSON.parse(sessionStorage.getItem("usuarioLogado"));
-        const switcherBox = document.getElementById('rbac-switcher-box');
-        const btnSair = document.querySelector('.site-header .header-actions a[href="/"]');
 
-        // Limpar cache ao fazer logout (Sair)
-        if (btnSair) {
-          btnSair.addEventListener('click', () => {
-            sessionStorage.clear();
-            localStorage.clear();
-          });
-        }
-
-        if (usuarioLogado) {
-          if (usuarioLogado.perfil === "docente") {
-            // Esconder switcher RBAC (Professores somente como professores não devem poder escolher perfil RBAC)
-            if (switcherBox) switcherBox.style.display = "none";
-            
-            // Forçar exibição apenas do painel docente
-            document.getElementById('panel-gestor').style.display = "none";
-            document.getElementById('panel-docente').style.display = "block";
-            document.getElementById('dashboard-title').textContent = "Acompanhamento Comportamental";
-            
-            currentRole = "docente";
-            inicializarPainelProfessor();
-            renderizarTurmasDocente();
-          } else if (usuarioLogado.perfil === "equipe_multidisciplinar") {
-            if (switcherBox) switcherBox.style.display = "none";
-            showRolePanel('saude');
-          } else {
-            // Se for coordenador (gestao)
-            if (switcherBox) switcherBox.style.display = "flex";
-            currentRole = "gestor";
-            carregarUsuarios();
-            inicializarPainelProfessor();
-            inicializarPainelCoordenacao();
-          }
-        } else {
-          // Se não houver login (acessando URL direto para teste/revisão)
-          // Default para gestor, mas mostra o switcher para facilitar testes do desenvolvedor
-          if (switcherBox) switcherBox.style.display = "flex";
-          currentRole = "gestor";
-          carregarUsuarios();
-          inicializarPainelProfessor();
+        if (role === 'gestor') {
           inicializarPainelCoordenacao();
+          inicializarCompartilhamentoDeMateriais();
+          carregarPendentes();
+        } else if (role === 'docente') {
+          inicializarPainelProfessor();
+          renderizarTurmasDocente();
         }
+        showRolePanel(role);
       });
     })();
   </script>
   <!-- Modal: Registro Comportamental do Estudante -->
-  <div id="student-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
+  <div id="student-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-student-name" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
     <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 550px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
       
       <!-- Botão Fechar -->
-      <button type="button" id="btn-close-modal" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
+      <button type="button" id="btn-close-modal" aria-label="Fechar" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
       
       <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Registro Psicossocial</span>
       <h2 style="margin-top: 0; margin-bottom: 4px;" id="modal-student-name">Lucas Mendes</h2>
@@ -2995,6 +2862,24 @@
         </button>
       </form>
 
+      <!-- Encaminhamento para a Equipe Multidisciplinar -->
+      <div style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 24px;">
+        <button type="button" class="btn btn-outline" id="btn-open-referral" aria-expanded="false" aria-controls="referral-form" style="width: 100%; padding: 12px; font-weight: 700;">
+          Encaminhar para Equipe Multidisciplinar
+        </button>
+        <form id="referral-form" novalidate hidden style="margin-top: 16px;">
+          <div class="field">
+            <label for="referral-motivo">Motivo do encaminhamento <span class="req">*</span></label>
+            <textarea id="referral-motivo" class="input-plain" required aria-describedby="referral-motivo-hint" style="height: 100px; padding: 12px; resize: vertical; font-family: inherit;"></textarea>
+            <span id="referral-motivo-hint" style="font-size: 0.78rem; color: var(--muted); margin-top: 4px; display: block;">Descreva o comportamento observado, sem diagnósticos.</span>
+          </div>
+          <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline" id="btn-cancel-referral" style="padding: 10px 18px; font-weight: 700;">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit-referral" style="padding: 10px 18px; font-weight: 700;">Confirmar Encaminhamento</button>
+          </div>
+        </form>
+      </div>
+
       <!-- Linha do Tempo de Histórico (Timeline) -->
       <div style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
         <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 1.1rem; color: var(--navy-dark); font-family: var(--font-serif);">Histórico de Registros</h3>
@@ -3006,47 +2891,14 @@
     </div>
   </div>
 
-  <!-- Modal: Adicionar Professor Manualmente -->
-  <div id="add-teacher-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
-    <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 500px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
-      
-      <button type="button" id="btn-close-add-teacher-modal" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
-      
-      <span class="badge" style="margin-bottom: 8px;"><span class="dot"></span> Cadastro de Professor</span>
-      <h2 style="margin-top: 0; margin-bottom: 4px;">Adicionar Professor à Rede</h2>
-      <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0; margin-bottom: 24px;">Registre um docente confiável diretamente no sistema, ativando seu acesso imediato.</p>
-
-      <form id="form-add-teacher" novalidate>
-        <div class="field">
-          <label for="add-teacher-nome">Nome Completo <span class="req">*</span></label>
-          <input id="add-teacher-nome" class="input-plain" type="text" placeholder="Ex.: Prof. Ricardo Souza Araujo" required />
-        </div>
-
-        <div class="field">
-          <label for="add-teacher-email">E-mail Institucional <span class="req">*</span></label>
-          <input id="add-teacher-email" class="input-plain" type="email" placeholder="Ex.: ricardo.araujo@ampara.edu.gov.br" required />
-        </div>
-
-        <div class="field">
-          <label for="add-teacher-escola">Escola Vinculada <span class="req">*</span></label>
-          <input id="add-teacher-escola" class="input-plain" type="text" placeholder="Ex.: Escola Estadual Castro Alves" required />
-        </div>
-
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-weight: 700; margin-top: 12px;">
-          Cadastrar Professor
-        </button>
-      </form>
-    </div>
-  </div>
-
   <!-- Modal: Registrar Ocorrência da Coordenação -->
-  <div id="occurrence-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
+  <div id="occurrence-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="occurrence-modal-title" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
     <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 550px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
       
-      <button type="button" id="btn-close-occurrence-modal" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
+      <button type="button" id="btn-close-occurrence-modal" aria-label="Fechar" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted);">&times;</button>
       
       <span class="badge" style="margin-bottom: 8px; background: #fee6c2; color: var(--warn);"><span class="dot" style="background: var(--warn);"></span> Intervenção Disciplinar</span>
-      <h2 style="margin-top: 0; margin-bottom: 4px;">Registrar Intervenção da Coordenação</h2>
+      <h2 style="margin-top: 0; margin-bottom: 4px;" id="occurrence-modal-title">Registrar Intervenção da Coordenação</h2>
       <p style="color: var(--muted); font-size: 0.88rem; margin-top: 0; margin-bottom: 24px;">Relate ocorrências severas onde foi exigida a atuação direta ou mediação da coordenação escolar.</p>
 
       <form id="form-coordination-occurrence" novalidate>
@@ -3065,12 +2917,6 @@
           <label for="occurrence-target-student">Selecione o Estudante <span class="req">*</span></label>
           <select id="occurrence-target-student" class="input-plain" required>
             <option value="" disabled selected>Selecione o estudante...</option>
-            <option value="1">Lucas Mendes de Oliveira (1º Ano A)</option>
-            <option value="2">Ana Beatriz Santos (1º Ano A)</option>
-            <option value="3">Gabriel Silva Costa (1º Ano A)</option>
-            <option value="5">João Pedro Alves (1º Ano B)</option>
-            <option value="8">Guilherme Cardoso (2º Ano A)</option>
-            <option value="11">Camila Ribeiro Araujo (2º Ano B)</option>
           </select>
         </div>
 
@@ -3078,10 +2924,6 @@
           <label for="occurrence-target-class">Selecione a Turma <span class="req">*</span></label>
           <select id="occurrence-target-class" class="input-plain" required>
             <option value="" disabled selected>Selecione a turma...</option>
-            <option value="1a">1º Ano A</option>
-            <option value="1b">1º Ano B</option>
-            <option value="2a">2º Ano A</option>
-            <option value="2b">2º Ano B</option>
           </select>
         </div>
 

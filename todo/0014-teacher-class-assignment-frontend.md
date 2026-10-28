@@ -2,10 +2,10 @@
 
 *Phase: MVP #1 (backbone). Story-map cards: "As a Teacher, I want to quickly record a behavioral observation about a student" (value 500, 3 points); "As a user, I want my data and the students' data to be handled according to the LGPD to guarantee full privacy" (value 800, 3 points).*
 
-*This specification defines the coordinator's class-assignment screen and the teacher's scoped class list. Its backend counterpart is [todo/0013-teacher-class-assignment-backend.md](0013-teacher-class-assignment-backend.md), which pins the routes and payloads used here. It builds on the roster wiring of [todo/0009-unified-dashboard-hardening-frontend.md](0009-unified-dashboard-hardening-frontend.md) and lands after it.*
+*This specification defines the coordinator's class-assignment screen and the teacher's scoped class list. Its backend counterpart is [todo/0013-teacher-class-assignment-backend.md](0013-teacher-class-assignment-backend.md), which pins the routes and payloads used here. It builds on the roster wiring of `0009` and lands after it.*
 
 ## Problem
-The coordinator has no way to say which teacher teaches which class. The teacher panel's "Minhas Turmas" sidebar and the "Visão Geral de Turmas" cards are hardcoded to 1º Ano A, 1º Ano B, 2º Ano A, and 2º Ano B with fixed student counts and alert labels, and [0009](0009-unified-dashboard-hardening-frontend.md) replaces them with every class of the school because no assignment exists. A teacher therefore browses students they do not teach, and the coordinator cannot see that a class has no teacher following it.
+The coordinator has no way to say which teacher teaches which class. The teacher panel's "Minhas Turmas" sidebar and the "Visão Geral de Turmas" cards are hardcoded to 1º Ano A, 1º Ano B, 2º Ano A, and 2º Ano B with fixed student counts and alert labels, and `0009` replaces them with every class of the school because no assignment exists. A teacher therefore browses students they do not teach, and the coordinator cannot see that a class has no teacher following it.
 
 ## Business Vision and Purposes
 Teachers should open the panel and find exactly their classes, so that recording an observation takes seconds and never touches a student outside their care. The coordinator sets this up once per term in the place where they already manage classes.

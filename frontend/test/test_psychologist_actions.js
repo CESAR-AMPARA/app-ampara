@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { loadDashboard, settle, GESTOR, PSICOLOGA } = require('./dashboard_harness');
+const { loadDashboard, settle, PSICOLOGA } = require('./dashboard_harness');
 
 function referral(id, status) {
   return {
@@ -136,22 +136,19 @@ test('no assigned cases shows an empty message', async () => {
   assert.match(document.getElementById('assigned-referrals-list').textContent, /Nenhum caso designado a você no momento/);
 });
 
-test('developer switcher opens the multidisciplinary panel and the library keeps it hidden', async () => {
-  const { document, calls } = loadDashboard({ usuario: GESTOR, routes: { [LIST_ROUTE]: list(referral(1, 'Aguardando Triagem')) } });
-  await settle();
+test('the library tab hides the multidisciplinary panel and "Painel de Trabalho" brings it back', async () => {
+  const { document, calls } = await openCases({ [LIST_ROUTE]: list(referral(1, 'Aguardando Triagem')) });
 
-  document.getElementById('btn-rbac-saude').click();
-  await settle();
   assert.strictEqual(document.getElementById('panel-saude').style.display, 'block');
   assert.strictEqual(document.getElementById('panel-gestor').style.display, 'none');
   assert.ok(calls.some(c => c.url === '/api/multidisciplinar/encaminhamentos'));
 
   document.getElementById('tab-btn-biblioteca').click();
-  document.getElementById('btn-rbac-gestor').click();
-  assert.strictEqual(document.getElementById('panel-gestor').style.display, 'none');
+  assert.strictEqual(document.getElementById('panel-saude').style.display, 'none');
   assert.strictEqual(document.getElementById('panel-biblioteca').style.display, 'block');
 
   document.getElementById('tab-btn-painel').click();
-  assert.strictEqual(document.getElementById('panel-gestor').style.display, 'block');
+  assert.strictEqual(document.getElementById('panel-saude').style.display, 'block');
+  assert.strictEqual(document.getElementById('panel-gestor').style.display, 'none');
   assert.strictEqual(document.getElementById('panel-biblioteca').style.display, 'none');
 });

@@ -147,6 +147,6 @@ test('multidisciplinary login shows only the assigned cases panel', async () => 
   assert.strictEqual(document.getElementById('panel-saude').style.display, 'block');
   assert.strictEqual(document.getElementById('panel-gestor').style.display, 'none');
   assert.strictEqual(document.getElementById('panel-docente').style.display, 'none');
-  assert.strictEqual(document.getElementById('rbac-switcher-box').style.display, 'none');
+  assert.strictEqual(document.getElementById('rbac-switcher-box'), null);
   assert.strictEqual(document.getElementById('dashboard-title').textContent, 'Casos Designados');
 });
