@@ -59,4 +59,4 @@ Both modules drive the real `dashboard.html` through `frontend/test/dashboard_ha
 ## Out of Scope
 - Logging, retention, and the query routes, specified in [todo/0027-access-audit-log-backend.md](0027-access-audit-log-backend.md).
 - Exporting the log, and charts of access volume.
-- Renaming the "Aguardando Auditoria" counter of the credentialing tab, which [todo/0012-access-management-frontend.md](0012-access-management-frontend.md) replaces.
+- Renaming the "Aguardando Auditoria" counter of the credentialing tab, which `0012` replaces.

@@ -64,7 +64,7 @@ test('the simulated profile switcher no longer exists', async () => {
 
 test('a 401 from a dashboard request sends the user to the login page', async () => {
   const cases = [
-    [GESTOR, 'GET /api/gestao/pendentes'],
+    [GESTOR, 'GET /api/gestao/equipe?status=Pendente'],
     [DOCENTE, 'GET /api/turmas'],
     [PSICOLOGA, 'GET /api/multidisciplinar/encaminhamentos']
   ];
