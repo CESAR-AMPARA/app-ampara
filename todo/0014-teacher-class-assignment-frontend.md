@@ -44,4 +44,4 @@ Every change to the dashboard and to `cadastro_turma.html` is mirrored under `fr
 ## Out of Scope
 - Backend routes and the scope policy, specified in [todo/0013-teacher-class-assignment-backend.md](0013-teacher-class-assignment-backend.md).
 - Risk indicators on class cards, specified in [todo/0022-risk-classification-alerts-frontend.md](0022-risk-classification-alerts-frontend.md).
-- Assigning classes from the team table of [todo/0012-access-management-frontend.md](0012-access-management-frontend.md).
+- Assigning classes from the team table of `0012`.

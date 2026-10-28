@@ -2,7 +2,7 @@
 
 *Phase: MVP #1 (backbone). Story-map card: "As an admin, I want to manage access permissions so that only authorized people see sensitive data" (value 500, 5 points).*
 
-*This specification defines the backend of request authorization and of the school team's account lifecycle. Its frontend counterpart is [todo/0012-access-management-frontend.md](0012-access-management-frontend.md), which can be built against this contract before it ships. It depends on the JWT issued by [todo/0002-multi-tenant-auth-registration-backend.md](0002-multi-tenant-auth-registration-backend.md) and the composition root of [todo/0010-backend-foundation-and-delivery-hardening-backend.md](0010-backend-foundation-and-delivery-hardening-backend.md).*
+*This specification defines the backend of request authorization and of the school team's account lifecycle. Its frontend counterpart `0012` has already shipped and consumes the contract below; its behaviour is recorded in `frontend/test/test_team_management.js` and `frontend/test/test_team_management_dialog.js`. It depends on the JWT issued by [todo/0002-multi-tenant-auth-registration-backend.md](0002-multi-tenant-auth-registration-backend.md) and the composition root of [todo/0010-backend-foundation-and-delivery-hardening-backend.md](0010-backend-foundation-and-delivery-hardening-backend.md).*
 
 ## Problem
 The specs that make up the MVP each say "accessible only to the coordinator" or "Headers: `Authorization: Bearer <token>`", but none defines how a request proves who it comes from, what happens when the token is missing or expired, or what happens to a professional the school no longer wants on the platform. [0002](0002-multi-tenant-auth-registration-backend.md) lets a Gestor Escolar approve a pending account and nothing else: there is no way to turn down a registration from someone who does not work at the school, to suspend a teacher who left, or to bring back a professional returning from leave. A token issued to a suspended teacher keeps working until it expires, so suspension, once it exists, would not take effect for hours.
@@ -107,7 +107,7 @@ The guard and the routes are exercised through the Flask test client against in-
 - `backend/test/test_api_gestao_usuarios_lifecycle.py`: each transition from each state; refusal removes both the tenant row and the Master mapping and lets the e-mail register again; self-suspension and last-manager suspension refused; a suspended user's next request gets 401 and reactivation restores access.
 
 ## Out of Scope
-- The team management screen, specified in [todo/0012-access-management-frontend.md](0012-access-management-frontend.md).
+- The team management screen of `0012`, which has shipped; its behaviour is recorded in `frontend/test/test_team_management.js`.
 - Changing a user's profile after approval; a professional changing role registers again.
 - Fine-grained permissions beyond the three profiles; which students each profile sees is [todo/0013-teacher-class-assignment-backend.md](0013-teacher-class-assignment-backend.md).
 - Notifying the person by e-mail when they are approved, refused, or suspended.

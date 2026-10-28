@@ -97,6 +97,21 @@
       color: var(--sage-badge-tx);
     }
     /* Fila de Encaminhamentos: prioridade e status */
+    .status-badge.suspended { background-color: #fce8e6; color: #9b2c1f; }
+    .registration-note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: var(--card-inset);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+      color: var(--ink-soft);
+    }
     .status-badge.priority-alta { background-color: #fce8e6; color: #9b2c1f; }
     .status-badge.priority-media { background-color: #fcf1d4; color: #9a5b10; }
     .status-badge.priority-baixa { background-color: var(--sage-badge); color: var(--sage-badge-tx); }
@@ -422,32 +437,67 @@
           <a class="btn btn-outline" href="/cadastro_estudante">🎓 Cadastrar Estudantes</a>
         </div>
 
+        <!-- Como novos profissionais entram -->
+        <div class="registration-note">
+          <span id="registration-note-text">Novos profissionais solicitam acesso pelo cadastro e aparecem aqui para aprovação.</span>
+          <button type="button" class="btn btn-outline" id="btn-copy-registration-link" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 700;">Copiar link de cadastro</button>
+        </div>
+
         <!-- Grade de Estatísticas -->
         <div class="stats-grid">
+          <div class="stat-card">
+            <div class="value" id="stat-active" style="color: var(--ok);">0</div>
+            <div class="label">Ativos</div>
+          </div>
           <div class="stat-card">
             <div class="value" id="stat-pending" style="color: var(--warn);">0</div>
             <div class="label">Aguardando Aprovação</div>
           </div>
+          <div class="stat-card">
+            <div class="value" id="stat-suspended" style="color: #9b2c1f;">0</div>
+            <div class="label">Suspensos</div>
+          </div>
         </div>
 
-        <!-- Tabela de Usuários -->
+        <!-- Tabela da Equipe -->
         <div class="users-table-card">
-          <h2>Solicitações Pendentes</h2>
-          <p class="description">Revise as informações de cadastro e valide o vínculo profissional de cada usuário antes de conceder acesso ao sistema.</p>
+          <h2>Equipe da Escola</h2>
+          <p class="description">Revise as informações de cadastro, aprove novos profissionais e retire o acesso de quem não faz mais parte da escola.</p>
+
+          <div class="referral-filters">
+            <div class="field">
+              <label for="team-filter-status">Status</label>
+              <select id="team-filter-status" class="input-plain">
+                <option value="">Todos</option>
+                <option value="Pendente">Aguardando Aprovação</option>
+                <option value="Ativo">Ativos</option>
+                <option value="Suspenso">Suspensos</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="team-filter-perfil">Perfil</label>
+              <select id="team-filter-perfil" class="input-plain">
+                <option value="">Todos</option>
+                <option value="gestor_escolar">Gestão / Coordenação</option>
+                <option value="docente">Docente</option>
+                <option value="equipe_multidisciplinar">Equipe Multidisciplinar</option>
+              </select>
+            </div>
+          </div>
 
           <div class="table-responsive">
             <table class="dashboard-table">
               <thead>
                 <tr>
                   <th>Nome</th>
-                  <th>E-mail</th>
                   <th>Perfil</th>
-                  <th>Cargo / Matrícula</th>
-                  <th>Solicitado em</th>
+                  <th>Cargo</th>
+                  <th>Status</th>
+                  <th>Desde</th>
                   <th>Ações</th>
                 </tr>
               </thead>
-              <tbody id="users-tbody">
+              <tbody id="users-tbody" aria-live="polite">
                 <tr>
                   <td colspan="6" class="empty-state">
                     <div class="icon">🔄</div>
@@ -807,66 +857,217 @@
         equipe_multidisciplinar: 'Equipe Multidisciplinar'
       };
 
-      function renderCredentialingMessage(icon, message) {
+      // --- EQUIPE DA ESCOLA (GET /api/gestao/equipe e transições de acesso) ---
+      const TEAM_STATUS = {
+        Pendente: { label: 'Aguardando Aprovação', badge: 'pending' },
+        Ativo: { label: 'Ativo', badge: 'approved' },
+        Suspenso: { label: 'Suspenso', badge: 'suspended' }
+      };
+
+      const TEAM_ACTIONS = {
+        aprovar: { label: 'Aprovar', ariaPrefix: 'Aprovar cadastro de', primary: true },
+        recusar: { label: 'Recusar', ariaPrefix: 'Recusar cadastro de', confirm: true },
+        suspender: { label: 'Suspender', ariaPrefix: 'Suspender acesso de', confirm: true },
+        reativar: { label: 'Reativar', ariaPrefix: 'Reativar acesso de', primary: true }
+      };
+
+      let teamMembers = [];
+      let accessConfirmation = null;
+      let fecharConfirmacaoAcesso = () => {};
+
+      function renderCredentialingMessage(icon, message, withRetry) {
         document.getElementById('users-tbody').innerHTML = `
           <tr>
             <td colspan="6" class="empty-state">
               <div class="icon">${icon}</div>
               <div>${message}</div>
+              ${withRetry ? '<button type="button" class="btn btn-outline" id="btn-retry-team" style="margin-top: 12px; padding: 8px 16px; font-weight: 700;">Tentar novamente</button>' : ''}
             </td>
           </tr>
         `;
       }
 
-      function carregarPendentes() {
-        return apiRequest('/api/gestao/pendentes')
-          .then(data => renderizarPendentes(data.pendentes || []))
-          .catch(err => {
-            if (err.message !== 'Unauthorized') renderCredentialingMessage('⚠️', 'Erro ao conectar ao servidor para buscar dados.');
-          });
-      }
+      function carregarEquipe() {
+        const params = new URLSearchParams();
+        const status = document.getElementById('team-filter-status').value;
+        const perfil = document.getElementById('team-filter-perfil').value;
+        if (status) params.set('status', status);
+        if (perfil) params.set('perfil', perfil);
+        const query = params.toString();
 
-      function renderizarPendentes(pendentes) {
-        document.getElementById('stat-pending').textContent = pendentes.length;
-        if (!pendentes.length) {
-          renderCredentialingMessage('📁', 'Nenhuma solicitação de cadastro pendente.');
-          return;
-        }
-        document.getElementById('users-tbody').innerHTML = pendentes.map(u => `
-          <tr id="user-row-${u.id}">
-            <td><strong>${escapeHtml(u.nome)}</strong></td>
-            <td>${escapeHtml(u.email)}</td>
-            <td>${escapeHtml(PERFIL_LABELS[u.perfil] || u.perfil)}</td>
-            <td>${escapeHtml(u.cargo)}<span class="referral-meta">Matrícula ${escapeHtml(u.matricula)}</span></td>
-            <td>${formatReferralDate(u.created_at)}</td>
-            <td><button type="button" class="btn btn-primary btn-aprovar" data-id="${u.id}" aria-label="Aprovar cadastro de ${escapeHtml(u.nome)}" style="padding: 6px 12px; font-size: 0.8rem;">Aprovar Cadastro</button></td>
-          </tr>
-        `).join('');
-      }
-
-      function aprovarCadastro(btn) {
-        const id = btn.getAttribute('data-id');
-        const reativar = () => {
-          btn.disabled = false;
-          btn.textContent = 'Aprovar Cadastro';
-        };
-        btn.disabled = true;
-        btn.textContent = 'Processando...';
-        apiRequest(`/api/gestao/usuarios/${id}/aprovar`, { method: 'POST' })
-          .then(result => {
-            if (!result.sucesso) {
-              toast(result.mensagem || 'Não foi possível aprovar o cadastro.');
-              reativar();
-              return;
-            }
-            toast(result.mensagem || 'Usuário aprovado com sucesso.');
-            return carregarPendentes();
+        return apiRequest('/api/gestao/equipe' + (query ? '?' + query : ''))
+          .then(data => {
+            teamMembers = data.usuarios || [];
+            atualizarResumoEquipe(data.resumo || {});
+            renderizarEquipe();
+            return data;
           })
           .catch(err => {
-            if (err.message === 'Unauthorized') return;
-            toast('Erro de conexão ao tentar aprovar o cadastro.');
-            reativar();
+            if (err.message !== 'Unauthorized') renderCredentialingMessage('⚠️', 'Não foi possível carregar a equipe. Tente novamente.', true);
           });
+      }
+
+      // The tab opens on pending requests when there are any; resumo counts the whole school whatever the filter.
+      function carregarEquipeInicial() {
+        const statusFilter = document.getElementById('team-filter-status');
+        statusFilter.value = 'Pendente';
+        return carregarEquipe().then(data => {
+          if (data && data.resumo && data.resumo.pendentes === 0) {
+            statusFilter.value = 'Ativo';
+            return carregarEquipe();
+          }
+        });
+      }
+
+      function atualizarResumoEquipe(resumo) {
+        document.getElementById('stat-active').textContent = resumo.ativos || 0;
+        document.getElementById('stat-pending').textContent = resumo.pendentes || 0;
+        document.getElementById('stat-suspended').textContent = resumo.suspensos || 0;
+      }
+
+      function acoesDisponiveis(user, meuId, gestoresAtivos) {
+        if (user.status === 'Pendente') return ['aprovar', 'recusar'];
+        if (user.status === 'Suspenso') return ['reativar'];
+        // Every active manager is listed whenever any of them is, so this count is exact; the backend refuses the same cases with 409.
+        const ultimoGestor = user.perfil === 'gestor_escolar' && gestoresAtivos <= 1;
+        return user.id === meuId || ultimoGestor ? [] : ['suspender'];
+      }
+
+      function renderizarEquipe() {
+        if (!teamMembers.length) {
+          renderCredentialingMessage('📁', 'Nenhum profissional encontrado com estes filtros.');
+          return;
+        }
+        const meuId = (usuarioDaSessao() || {}).id;
+        const gestoresAtivos = teamMembers.filter(u => u.perfil === 'gestor_escolar' && u.status === 'Ativo').length;
+
+        document.getElementById('users-tbody').innerHTML = teamMembers.map(u => {
+          const status = TEAM_STATUS[u.status] || { label: u.status, badge: '' };
+          const acoes = acoesDisponiveis(u, meuId, gestoresAtivos).map(action => {
+            const def = TEAM_ACTIONS[action];
+            return `<button type="button" class="btn ${def.primary ? 'btn-primary' : 'btn-outline'}" data-team-action="${action}" data-user-id="${u.id}" aria-label="${def.ariaPrefix} ${escapeHtml(u.nome)}" style="padding: 6px 12px; font-size: 0.8rem;">${def.label}</button>`;
+          }).join('');
+          return `
+            <tr id="user-row-${u.id}">
+              <td><strong>${escapeHtml(u.nome)}</strong><span class="referral-meta">${escapeHtml(u.email)}</span></td>
+              <td>${escapeHtml(PERFIL_LABELS[u.perfil] || u.perfil)}</td>
+              <td>${escapeHtml(u.cargo)}${u.registro_profissional ? `<span class="referral-meta">${escapeHtml(u.registro_profissional)}</span>` : ''}</td>
+              <td><span class="status-badge ${status.badge}"><span class="dot"></span> ${escapeHtml(status.label)}</span></td>
+              <td>${formatReferralDate(u.status_alterado_em || u.created_at)}</td>
+              <td><div style="display: flex; gap: 8px; flex-wrap: wrap;">${acoes}</div></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function executarAcaoEquipe(action, user, btn) {
+        btn.disabled = true;
+        return apiRequest(`/api/gestao/usuarios/${user.id}/${action}`, { method: 'POST' })
+          .then(result => {
+            if (!result.sucesso) {
+              toast(result.mensagem || 'Não foi possível concluir a ação.');
+              return false;
+            }
+            toast(result.mensagem || 'Ação concluída.');
+            return carregarEquipe().then(() => true);
+          })
+          .catch(err => {
+            if (err.message !== 'Unauthorized') toast('Erro ao conectar ao servidor.');
+            return false;
+          })
+          .then(ok => {
+            btn.disabled = false;
+            return ok;
+          });
+      }
+
+      function handleTeamAction(btn) {
+        const action = btn.getAttribute('data-team-action');
+        const user = teamMembers.find(u => u.id === Number(btn.getAttribute('data-user-id')));
+        if (!user || btn.disabled) return;
+        if (TEAM_ACTIONS[action].confirm) abrirConfirmacaoAcesso(action, user);
+        else executarAcaoEquipe(action, user, btn);
+      }
+
+      function paragrafo(texto, cor) {
+        const p = document.createElement('p');
+        p.style.margin = '0 0 10px';
+        if (cor) {
+          p.style.color = cor;
+          p.style.fontWeight = '700';
+        }
+        p.textContent = texto;
+        return p;
+      }
+
+      function abrirConfirmacaoAcesso(action, user) {
+        const body = document.getElementById('access-confirm-body');
+        const confirmBtn = document.getElementById('btn-access-confirm');
+        body.innerHTML = '';
+        if (action === 'recusar') {
+          document.getElementById('access-confirm-title').textContent = 'Recusar solicitação de cadastro?';
+          body.appendChild(paragrafo(`Os dados enviados por ${user.nome} serão excluídos. A pessoa poderá se cadastrar novamente.`));
+          confirmBtn.textContent = 'Recusar cadastro';
+        } else {
+          document.getElementById('access-confirm-title').textContent = 'Suspender acesso?';
+          body.appendChild(paragrafo(`${user.nome} perderá o acesso imediatamente, inclusive em sessões já abertas.`));
+          if (user.casos_abertos > 0) {
+            body.appendChild(paragrafo(`Esta pessoa tem ${user.casos_abertos} caso(s) em aberto na Fila de Encaminhamentos. Redesigne-os após a suspensão.`, 'var(--warn)'));
+          }
+          confirmBtn.textContent = 'Suspender acesso';
+        }
+        accessConfirmation = { action: action, user: user };
+        openDialog(document.getElementById('access-confirm-modal'), document.getElementById('btn-cancel-access-confirm'));
+      }
+
+      function confirmarAcaoAcesso() {
+        if (!accessConfirmation) return;
+        const { action, user } = accessConfirmation;
+        executarAcaoEquipe(action, user, document.getElementById('btn-access-confirm')).then(() => {
+          fecharConfirmacaoAcesso();
+          // The row that opened the dialog is gone after a reload; keep keyboard users inside the tab.
+          const focused = document.activeElement;
+          if (!focused || focused === document.body || document.getElementById('access-confirm-modal').contains(focused)) {
+            document.getElementById('team-filter-status').focus();
+          }
+        });
+      }
+
+      function inicializarEquipe() {
+        document.getElementById('team-filter-status').addEventListener('change', carregarEquipe);
+        document.getElementById('team-filter-perfil').addEventListener('change', carregarEquipe);
+        document.getElementById('users-tbody').addEventListener('click', (e) => {
+          if (e.target.closest('#btn-retry-team')) {
+            carregarEquipe();
+            return;
+          }
+          const btn = e.target.closest('[data-team-action]');
+          if (btn) handleTeamAction(btn);
+        });
+
+        fecharConfirmacaoAcesso = bindDialog(
+          document.getElementById('access-confirm-modal'),
+          document.getElementById('btn-cancel-access-confirm'),
+          () => { accessConfirmation = null; }
+        );
+        document.getElementById('btn-access-confirm').addEventListener('click', confirmarAcaoAcesso);
+
+        const url = window.location.origin + '/cadastro';
+        document.getElementById('registration-note-text').textContent =
+          `Novos profissionais solicitam acesso pelo cadastro em ${url} e aparecem aqui para aprovação.`;
+        document.getElementById('btn-copy-registration-link').addEventListener('click', () => {
+          const clipboard = navigator.clipboard;
+          if (!clipboard) {
+            toast(`Copie o endereço: ${url}`);
+            return;
+          }
+          clipboard.writeText(url).then(
+            () => toast('Link de cadastro copiado.'),
+            () => toast(`Não foi possível copiar. Endereço: ${url}`)
+          );
+        });
+
+        return carregarEquipeInicial();
       }
 
       function escapeHtml(text) {
@@ -1742,11 +1943,6 @@
             });
           });
         }
-
-        document.getElementById('users-tbody').addEventListener('click', (e) => {
-          const btn = e.target.closest('.btn-aprovar');
-          if (btn) aprovarCadastro(btn);
-        });
 
         // --- SUB-ABA 2: BUSCA REAL-TIME EM TURMAS E ESTUDANTES ---
         const classesInput = document.getElementById('search-classes-input');
@@ -2778,7 +2974,7 @@
         if (role === 'gestor') {
           inicializarPainelCoordenacao();
           inicializarCompartilhamentoDeMateriais();
-          carregarPendentes();
+          inicializarEquipe();
         } else if (role === 'docente') {
           inicializarPainelProfessor();
           renderizarTurmasDocente();
@@ -2956,6 +3152,18 @@
           Registrar Ocorrência
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmação de Recusa ou Suspensão de Acesso -->
+  <div id="access-confirm-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="access-confirm-title" aria-describedby="access-confirm-body" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; padding: 16px;">
+    <div class="form-card" style="background: var(--card); border-radius: var(--radius); padding: 32px; width: 100%; max-width: 480px; box-shadow: var(--shadow); position: relative; max-height: 90vh; overflow-y: auto;">
+      <h2 style="margin-top: 0; margin-bottom: 12px;" id="access-confirm-title">—</h2>
+      <div id="access-confirm-body" style="color: var(--ink-soft); font-size: 0.95rem; line-height: 1.5;"></div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin-top: 24px;">
+        <button type="button" class="btn btn-outline" id="btn-cancel-access-confirm" style="padding: 12px 20px; font-weight: 700;">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btn-access-confirm" style="padding: 12px 20px; font-weight: 700;">—</button>
+      </div>
     </div>
   </div>
 
