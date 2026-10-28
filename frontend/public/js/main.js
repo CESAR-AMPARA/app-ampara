@@ -749,7 +749,9 @@
       toastEl.style.cssText =
         'position:fixed;left:50%;bottom:26px;transform:translateX(-50%);' +
         'background:#34495f;color:#fff;padding:13px 20px;border-radius:12px;' +
-        'box-shadow:0 12px 30px -12px rgba(0,0,0,.5);z-index:200;max-width:90vw;' +
+        // max-content keeps short messages on one line; left:50% alone would cap the box at half the screen.
+        'box-shadow:0 12px 30px -12px rgba(0,0,0,.5);z-index:200;' +
+        'width:max-content;max-width:calc(100vw - 32px);' +
         'font-size:.92rem;opacity:0;transition:opacity .2s,transform .2s;';
       document.body.appendChild(toastEl);
     }
@@ -762,7 +764,17 @@
     toastEl._t = setTimeout(function () { toastEl.style.opacity = '0'; }, 3800);
   }
 
+  /* -------------------- Logout -------------------- */
+  // Only the session leaves; accessibility preferences (ampara.a11y) stay on the device.
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    sessionStorage.removeItem('usuarioLogado');
+    window.location.href = '/login';
+  }
+
   // dashboard.html's inline script calls these as globals.
   window.toast = toast;
   window.apiRequest = apiRequest;
+  window.logout = logout;
 })();

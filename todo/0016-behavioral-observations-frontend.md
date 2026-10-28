@@ -2,14 +2,14 @@
 
 *Phase: MVP #1 (backbone). Story-map cards: "As a Teacher, I want to quickly record a behavioral observation about a student" (value 500, 3 points); "As a user, I want to see a student's unified history of observations with period filters to understand their evolution before intervening" (value 800, 3 points); "As a Teacher, I want to refer a student to the coordination with one click from a recorded observation" (value 500, 3 points).*
 
-*This specification defines the screens that record observations and occurrences and show the unified student history. Its backend counterpart is [todo/0015-behavioral-observations-backend.md](0015-behavioral-observations-backend.md), which pins every route and payload used here. It builds on the roster wiring of [todo/0009-unified-dashboard-hardening-frontend.md](0009-unified-dashboard-hardening-frontend.md) and the scoped teacher panel of [todo/0014-teacher-class-assignment-frontend.md](0014-teacher-class-assignment-frontend.md).*
+*This specification defines the screens that record observations and occurrences and show the unified student history. Its backend counterpart is [todo/0015-behavioral-observations-backend.md](0015-behavioral-observations-backend.md), which pins every route and payload used here. It builds on the roster wiring of `0009` and the scoped teacher panel of [todo/0014-teacher-class-assignment-frontend.md](0014-teacher-class-assignment-frontend.md).*
 
 ## Problem
 Every recording screen in the dashboard is a prototype that forgets. "Salvar Registro" in `#student-modal` pushes into the in-page `mockStudents` arrays and confirms with a blocking `alert()`; the emotion chips toggle a flag on the same arrays; "Registrar Ocorrência" pushes into `localOccurrences` and rewrites the student's log as a high-severity entry. Nothing survives a reload, nothing reaches another user, and the "Linha do Tempo Comportamental" in "Busca & Registros" and the "Histórico de Registros" in the student modal show hardcoded entries.
 
 The microphone button next to the description is worse than unfinished: the "Simulador de Microfone" types canned text into the description while showing "Gravando áudio... fale agora". On a real deployment a teacher would save words they never said into a student's mental-health record.
 
-The referral button that [0009](0009-unified-dashboard-hardening-frontend.md) adds to the student modal asks the teacher to retype the reason, although the observation they just recorded already says it.
+The referral button that `0009` adds to the student modal asks the teacher to retype the reason, although the observation they just recorded already says it.
 
 ## Business Vision and Purposes
 Teachers record only if it is faster than not recording: a tap for a quick signal, a short form for anything more, from a phone between classes. Coordinators and psychologists act only on a history they trust, so the history must show exactly what was recorded, by whom, and when, in one place. This spec turns the prototype into that workflow without changing the layout people already reviewed.

@@ -7,7 +7,7 @@
 ## Problem
 The specs that make up the MVP each say "accessible only to the coordinator" or "Headers: `Authorization: Bearer <token>`", but none defines how a request proves who it comes from, what happens when the token is missing or expired, or what happens to a professional the school no longer wants on the platform. [0002](0002-multi-tenant-auth-registration-backend.md) lets a Gestor Escolar approve a pending account and nothing else: there is no way to turn down a registration from someone who does not work at the school, to suspend a teacher who left, or to bring back a professional returning from leave. A token issued to a suspended teacher keeps working until it expires, so suspension, once it exists, would not take effect for hours.
 
-The coordinator also lost the team overview. [0009](0009-unified-dashboard-hardening-frontend.md) drops the "Total de Profissionais" and "Credenciados / Ativos" counters because `GET /api/gestao/pendentes` returns only pending accounts, so the coordinator cannot see who currently has access to student data.
+The coordinator also lost the team overview. `0009` drops the "Total de Profissionais" and "Credenciados / Ativos" counters because `GET /api/gestao/pendentes` returns only pending accounts, so the coordinator cannot see who currently has access to student data.
 
 ## Business Vision and Purposes
 Only people the school vouches for may read mental-health observations about its students, and the school must be able to withdraw that access the same day someone leaves. This spec gives the Gestor Escolar the full lifecycle (approve, refuse, suspend, reactivate) and a list of everyone with access, and it gives every endpoint of the product one shared, tested way to enforce who may call it.

@@ -47,7 +47,7 @@ A video card embeds `video_embed_url` in an `<iframe>` with `title="Vídeo: {tí
 States: "Carregando materiais..."; the existing empty copy "Nenhum material de capacitação compartilhado com sua turma ainda."; "Não foi possível carregar os materiais. Tente novamente." with "Tentar novamente".
 
 ### What is deleted
-`materiaisIniciais`, every read and write of `localStorage` key `materiaisCapacitacao`, the hardcoded recipient checkboxes, the `classNameMap` of both renderers, the fake PDF card and its toast, and `obterClasseDoProfessorLogado` if `0009` has not already removed it. A one-time cleanup removes the `materiaisCapacitacao` key from `localStorage` on dashboard load, so the old prototype data does not linger in browsers that ran it. Every change is mirrored under `frontend/src/templates/dashboard.html`, as `frontend/test/test_flask_copies.js` enforces.
+Every read and write of `localStorage` key `materiaisCapacitacao` (through `lerMateriais()` and the read-confirmation handler) and the fake PDF card and its toast. `0009` already removed `materiaisIniciais`, `obterClasseDoProfessorLogado`, and the hardcoded recipient checkboxes, which now come from `GET /api/turmas`. A one-time cleanup removes the `materiaisCapacitacao` key from `localStorage` on dashboard load, so the old prototype data does not linger in browsers that ran it. Every change is mirrored under `frontend/src/templates/dashboard.html`, as `frontend/test/test_flask_copies.js` enforces.
 
 ## Testing Decisions
 Both modules drive the real `dashboard.html` through `frontend/test/dashboard_harness.js` with `fetch` doubled per route; the harness's `fetch` double records `FormData` bodies and supports `blob()`, and `window.open` and `URL.createObjectURL` are stubbed.

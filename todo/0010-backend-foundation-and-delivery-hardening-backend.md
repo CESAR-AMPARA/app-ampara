@@ -79,7 +79,7 @@ The smoke test is verified once by hand: run the image without the mount and con
 ## Out of Scope
 - Multi-tenant models, login, MFA, and approval, specified in [todo/0002-multi-tenant-auth-registration-backend.md](0002-multi-tenant-auth-registration-backend.md).
 - The authorization guard and role checks, specified in [todo/0011-access-management-backend.md](0011-access-management-backend.md).
-- Any frontend change: the pages keep calling the same routes, apart from `/api/aprovar`, whose caller [todo/0009-unified-dashboard-hardening-frontend.md](0009-unified-dashboard-hardening-frontend.md) already replaces.
+- Any frontend change: the pages keep calling the same routes, apart from `/api/aprovar`, whose caller `0009` already replaces.
 - A secrets manager service (AWS Secrets Manager, Vault); the file adapter is the seam where one would plug in.
 - Database migrations for existing data; there is no production data worth migrating today.
 
