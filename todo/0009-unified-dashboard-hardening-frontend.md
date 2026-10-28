@@ -1,5 +1,7 @@
 # Unified Dashboard Hardening Frontend
 
+*Phase: MVP #1 (backbone). Story-map cards: "As a user, I want to log in securely from any device to access AMPARA quickly and without additional registration" (value 100, 1 point); "As a Teacher, I want to refer a student to the coordination with one click from a recorded observation" (value 500, 3 points); "As a Pedagogical Coordinator, I want to manage the queue of referrals to psychologists or social workers" (value 500, 5 points).*
+
 *This specification is frontend-only and has no backend counterpart of its own: it consumes contracts already pinned in [todo/0002-multi-tenant-auth-registration-backend.md](0002-multi-tenant-auth-registration-backend.md), [todo/0004-student-class-management-backend.md](0004-student-class-management-backend.md), and [todo/0006-referral-queue-management-backend.md](0006-referral-queue-management-backend.md). The items under "Shared layout and accessibility fixes" ship independently; the others ship as each backend lands.*
 
 ## Problem

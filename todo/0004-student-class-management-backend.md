@@ -1,5 +1,7 @@
 # Student and Class Management Backend
 
+*Phase: MVP #1 (backbone). Story-map card: "As a Teacher, I want to quickly record a behavioral observation about a student" (value 500, 3 points), which needs the school's roster to exist first.*
+
 *This specification defines the backend implementation of the student and class database schemas, manual registration, and spreadsheet-based batch import APIs. Its frontend counterpart has already shipped and consumes the contract below; its behaviour is recorded in `frontend/test/test_cadastro_turma_ui.js`, `frontend/test/test_cadastro_estudante_dropdown.js`, and `frontend/test/test_dropzone_behavior.js`.*
 
 ## Problem
